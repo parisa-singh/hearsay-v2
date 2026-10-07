@@ -21,6 +21,7 @@ function CustomTooltip({ active, payload, label }) {
 export default function ComparisonChart({ results }) {
   // Expanded by default — the comparison is the point of the page.
   const [open, setOpen] = useState(true)
+  const [infoOpen, setInfoOpen] = useState(false)
 
   const rated = results.filter(r => r.data?.rating != null && !r.isError)
   if (rated.length < 2) return null
@@ -35,21 +36,66 @@ export default function ComparisonChart({ results }) {
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-zinc-800/50 transition-colors"
-      >
-        <span className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
-          Platform Comparison
-        </span>
-        <svg
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2"
-          className={`text-zinc-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+      <div className="w-full flex items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="text-sm font-semibold text-zinc-400 uppercase tracking-wider text-left hover:text-zinc-200 transition-colors"
+          >
+            Platform Comparison
+          </button>
+
+          {/* Info popover — explains what the comparison means */}
+          <div className="relative flex items-center">
+            <button
+              type="button"
+              onClick={() => setInfoOpen(v => !v)}
+              aria-label="What does this comparison show?"
+              aria-expanded={infoOpen}
+              className="text-zinc-500 hover:text-zinc-200 transition-colors"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </button>
+
+            {infoOpen && (
+              <>
+                {/* click-away layer */}
+                <div className="fixed inset-0 z-10" onClick={() => setInfoOpen(false)} />
+                <div
+                  role="tooltip"
+                  className="absolute left-0 top-7 z-20 w-64 sm:w-72 rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-xs leading-relaxed text-zinc-300 shadow-xl normal-case tracking-normal font-normal"
+                >
+                  Each bar is a platform's <span className="text-zinc-100 font-medium">average rating</span> for
+                  this search, shown side by side. The gaps are the point: the same place can score very
+                  differently across platforms because each has a different audience and review style —
+                  tourists vs. locals, curated vs. candid. When two platforms differ by{' '}
+                  <span className="text-zinc-100 font-medium">1.5★ or more</span>, Hearsay flags it as a
+                  divergence above. Only platforms that report a numeric rating appear here.
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-label={open ? 'Collapse comparison' : 'Expand comparison'}
+          className="text-zinc-500 hover:text-zinc-300 transition-colors shrink-0"
         >
-          <path d="M6 9l6 6 6-6"/>
-        </svg>
-      </button>
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2"
+            className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          >
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+      </div>
 
       {open && (
         <div className="px-3 sm:px-6 pb-4 sm:pb-6 pt-1">

@@ -80,4 +80,17 @@ describe('ComparisonChart', () => {
     expect(screen.getByText('3.0')).toBeInTheDocument()
     expect(screen.getByText('2.0')).toBeInTheDocument()
   })
+
+  it('toggles an info popover from the i icon without collapsing the chart', () => {
+    render(<ComparisonChart results={[google, yelp]} />)
+    const info = screen.getByLabelText('What does this comparison show?')
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+
+    fireEvent.click(info)
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/average rating/i)
+    expect(screen.getByText('4.5')).toBeInTheDocument() // chart stayed open
+
+    fireEvent.click(info)
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  })
 })
