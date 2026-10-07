@@ -112,6 +112,14 @@ export default function ResultsPage() {
         <ComparisonChart results={ratedResults} />
       )}
 
+      {/* Honest low-coverage note: results exist but too few numeric ratings to compare */}
+      {!isAnyLoading && successfulResults.length > 0 && ratedResults.length < 2 && (
+        <p className="text-xs text-zinc-500 border border-zinc-800 rounded-lg px-4 py-3">
+          Only {ratedResults.length} platform{ratedResults.length !== 1 ? 's' : ''} returned a
+          numeric rating — at least 2 are needed to show the comparison. The reviews below still apply.
+        </p>
+      )}
+
       {/* Media card */}
       <MediaCard results={results} />
 
