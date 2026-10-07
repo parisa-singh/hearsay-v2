@@ -1,6 +1,7 @@
 import { getCached, setCached } from '../utils/cache.js'
 import { errorResponse } from '../utils/errors.js'
 import { filterReviewsForCategory } from '../utils/relevanceFilter.js'
+import { extractRating, extractReviewCount } from '../utils/serpapiRating.js'
 
 const SERPAPI_BASE = 'https://serpapi.com/search'
 const CACHE_TTL = 24 * 3600
@@ -60,7 +61,7 @@ export async function trustpilotHandler(request, env) {
     const reviews = filterReviewsForCategory(
       results.slice(0, 4).map(r => ({
         text: r.snippet ?? r.title ?? '',
-        rating: parseRatingFromSnippet(r.snippet),
+        rating: extractRating(r, parseRatingFromSnippet),
         author: null,
         date: null,
         url: r.link ?? null,
@@ -68,14 +69,16 @@ export async function trustpilotHandler(request, env) {
       category
     )
 
-    const ratingResult = results.find(r => r.snippet && parseRatingFromSnippet(r.snippet) !== null)
-    const rating = ratingResult ? parseRatingFromSnippet(ratingResult.snippet) : null
+    // Prefer SerpAPI's structured TrustScore/rating; fall back to prose parse.
+    const ratingResult = results.find(r => extractRating(r, parseRatingFromSnippet) !== null)
+    const rating = ratingResult ? extractRating(ratingResult, parseRatingFromSnippet) : null
+    const reviewCount = ratingResult ? extractReviewCount(ratingResult) : null
 
     const response = {
       platform: 'trustpilot',
       name: query,
       rating,
-      reviewCount: null,
+      reviewCount,
       sourceUrl: results[0]?.link ?? null,
       reviews,
     }

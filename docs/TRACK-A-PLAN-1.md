@@ -112,6 +112,60 @@ threads-pool timeout in the OneDrive folder; making it the default is a Foundati
 - [x] Add honest low-coverage note to `ResultsPage.jsx`
 - [x] Flip tests to assert fixed behavior (7 passing)
 - [x] Full suite (41) + build verified
-- [ ] Commit + push to `hearsay-v2` (awaiting go-ahead)
+- [x] Commit + push to `hearsay-v2` (commit `4467ef7`, deployed live)
 - [ ] Follow-up (Track B / Open decision #2): raise rating coverage so more searches clear the
       ≥ 2 bar — the remaining part of data starvation
+
+---
+
+## Update (2026-10-06): the graph still didn't show — it's the data layer
+
+After the UI fix deployed, a live search ("nobu", restaurant) still showed no graph. Testing the
+shared Worker directly revealed only **1** platform returns a numeric rating, so the ≥2 gate can't trip:
+
+| Platform | Live result for "nobu" | Why |
+| --- | --- | --- |
+| Google | rating 4.3 ✓ | working |
+| Yelp | HTTP 500 `TRIAL_EXPIRED` | Yelp Fusion API trial expired (billing — affects v1 too) |
+| TripAdvisor | rating `null` | route only regex-parsed prose snippets (no number in them) |
+| Trustpilot | rating `null` | same; also restaurant-gated |
+| Reddit | error (HTML, not JSON) | OAuth creds failing — erroring every search |
+| YouTube / Facebook | `null` | no star signal (expected) |
+
+So the "no graph" was **data starvation**, acute because Yelp (the reliable 2nd rating) is down.
+
+### Decisions on this round
+
+- **SerpAPI structured ratings (implemented).** TripAdvisor + Trustpilot now read SerpAPI's
+  structured rich-snippet rating (`detected_extensions.rating` / top-level `rating`) via a new shared
+  helper `workers/src/utils/serpapiRating.js`, falling back to the old prose regex. This recovers a
+  *real* aggregate rating for many queries — a legitimate 2nd/3rd source. (Not every query has one.)
+- **No fabricated 1–5 for comment-only platforms.** Reddit/YouTube/Facebook have no star signal
+  (YouTube hides dislikes; Facebook deprecated page star ratings; Reddit upvotes measure popularity,
+  not quality). The only way to a number is sentiment NLP = the AI-synthesis layer Hearsay avoids, and
+  it would mislead by sitting a made-up score next to Google's real one. They stay "mentions, no score".
+- **Sentiment lean (planned next — Parisa's idea).** Instead of a fake number, show a coarse,
+  honestly-labeled **review lean** (Positive / Mixed / Negative) for comment-only platforms, computed
+  algorithmically with a keyword/lexicon pass (no LLM), rendered as a small diverging bar. Kept
+  separate from star ratings and **excluded from divergence**. See "Next increment" below.
+- **Backend changes go to a separate v2 Worker first** (Parisa's choice), so v1 is untouched.
+  `workers/wrangler.toml` renamed `hearsay-api` → `hearsay-v2-api` (rate-limiter namespace → 2001).
+
+### To bring the v2 Worker online (interactive — needs Parisa)
+
+The backend code is committed but **not deployed** (needs Cloudflare auth + the secret values, which
+can't be read back from v1's Worker). Steps, run in this session with the `!` prefix:
+
+1. `! cd workers && npx wrangler login` (opens browser auth)
+2. `! cd workers && npx wrangler deploy` → creates `hearsay-v2-api`, prints its URL
+3. Set secrets on the new Worker (each is interactive):
+   `! cd workers && npx wrangler secret put GOOGLE_API_KEY` (repeat for `SERPAPI_KEY`, `YOUTUBE_API_KEY`,
+   `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`; `YELP_API_KEY` only once renewed)
+4. Point v2 at the new Worker: update `VITE_API_BASE_URL` (repo secret + `.env.local`) to
+   `https://hearsay-v2-api.parisa-singh.workers.dev`, then redeploy the frontend.
+
+### Next increment (Track A — Plan 2)
+
+- Add the algorithmic **review-lean** signal in the Worker (`lean: 'positive'|'mixed'|'negative'` +
+  counts) for comment-only platforms, and a small diverging-bar visual in `ComparisonChart` /
+  `PlatformCard`, clearly labeled and separate from star ratings.
