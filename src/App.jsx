@@ -19,7 +19,7 @@ const router = createBrowserRouter(
       ],
     },
   ],
-  { basename: '/hearsay' }
+  { basename: '/hearsay-v2' }
 )
 
 export default function App() {
