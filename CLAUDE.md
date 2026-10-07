@@ -10,7 +10,7 @@ Read this file first before doing anything else in a new session.
 This repo (`hearsay-v2`) is a **fork of v1**, created 2026-10-06 to freeze the shipped v1 and iterate freely. Full v1 git history is preserved below the fork commit.
 
 - **v1 stays live and untouched** at https://parisa-singh.github.io/hearsay (repo `parisa-singh/hearsay`). Don't change v1 from here.
-- **v2 shares v1's Cloudflare Worker** (`hearsay-api`) — same URL, same secrets, same shared SerpAPI/YouTube quotas. The `workers/` dir here is a copy; **running `wrangler deploy` from v2 redeploys the one shared Worker and affects live v1.** Treat backend changes as cross-cutting until v2 gets its own Worker.
+- **v2 has its OWN Cloudflare Worker** (`hearsay-v2-api`, deployed 2026-10-07) at `https://hearsay-v2-api.parisa-singh.workers.dev` — isolated from v1's `hearsay-api`. Secrets set: `GOOGLE_API_KEY`, `YOUTUBE_API_KEY`, `SERPAPI_KEY`. **Not set:** `REDDIT_CLIENT_ID`/`SECRET` (Reddit card errors quietly until added — kept integrated on purpose) and `YELP_API_KEY` (v1's trial expired; Yelp disabled until renewed). SerpAPI/YouTube quotas are still shared at the **API-key level** (same keys as v1). `wrangler deploy` from v2 now hits only `hearsay-v2-api`; v1 is untouched.
 - **GA4 is intentionally unset** in v2 so its traffic doesn't mix into v1's property (`G-M63F6NVM6J`). Create a dedicated v2 GA4 stream and set `VITE_GA_MEASUREMENT_ID` (repo secret + `.env.local`) when wanted.
 - Base path is `/hearsay-v2/` (vite `base`, router `basename`, 404 redirect).
 - **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — 34/34 pass.
