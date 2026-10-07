@@ -5,6 +5,19 @@ Read this file first before doing anything else in a new session.
 
 ---
 
+## ⚠️ This is Hearsay v2
+
+This repo (`hearsay-v2`) is a **fork of v1**, created 2026-10-06 to freeze the shipped v1 and iterate freely. Full v1 git history is preserved below the fork commit.
+
+- **v1 stays live and untouched** at https://parisa-singh.github.io/hearsay (repo `parisa-singh/hearsay`). Don't change v1 from here.
+- **v2 shares v1's Cloudflare Worker** (`hearsay-api`) — same URL, same secrets, same shared SerpAPI/YouTube quotas. The `workers/` dir here is a copy; **running `wrangler deploy` from v2 redeploys the one shared Worker and affects live v1.** Treat backend changes as cross-cutting until v2 gets its own Worker.
+- **GA4 is intentionally unset** in v2 so its traffic doesn't mix into v1's property (`G-M63F6NVM6J`). Create a dedicated v2 GA4 stream and set `VITE_GA_MEASUREMENT_ID` (repo secret + `.env.local`) when wanted.
+- Base path is `/hearsay-v2/` (vite `base`, router `basename`, 404 redirect).
+- **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — 34/34 pass.
+- Deploy pipeline is live: push to `main` → Actions → Pages. The `gh` token now has `workflow` scope (added 2026-10-06), so workflow files push from the CLI without the web-editor workaround.
+
+---
+
 ## Project Overview
 
 **Hearsay** is a cross-platform review aggregator. Users search for any restaurant, product, or place and get real reviews pulled in parallel from multiple platforms — not one algorithm's version.
@@ -17,9 +30,11 @@ Read this file first before doing anything else in a new session.
 
 **No AI synthesis layer** — divergence is calculated algorithmically in `src/utils/divergence.js`.
 
-**Live URL**: https://parisa-singh.github.io/hearsay  
-**Worker URL**: https://hearsay-api.parisa-singh.workers.dev  
-**GitHub**: https://github.com/parisa-singh/hearsay  
+**Live URL (v2)**: https://parisa-singh.github.io/hearsay-v2  
+**Live URL (v1, frozen)**: https://parisa-singh.github.io/hearsay  
+**Worker URL (shared with v1)**: https://hearsay-api.parisa-singh.workers.dev  
+**GitHub (v2)**: https://github.com/parisa-singh/hearsay-v2  
+**GitHub (v1)**: https://github.com/parisa-singh/hearsay  
 **Builder**: Parisa Singh — https://www.linkedin.com/in/parisa-singh/
 
 ---
@@ -34,7 +49,7 @@ Read this file first before doing anything else in a new session.
 | Server state | TanStack Query v5 | `useQueries` for parallel platform fetching |
 | UI state | Zustand v5 | Persist middleware for history, theme, location |
 | Charts | Recharts v2 | RadarChart + bar comparison in ComparisonChart |
-| Routing | React Router v7 | createBrowserRouter, basename: '/hearsay' |
+| Routing | React Router v7 | createBrowserRouter, basename: '/hearsay-v2' |
 | Serverless API | Cloudflare Workers | itty-router v4 |
 | Deployment | GitHub Actions → GitHub Pages | `npm install` + `vite build` + deploy-pages |
 | Testing | Vitest + jsdom + Testing Library | `npm test` runs 34 tests |
