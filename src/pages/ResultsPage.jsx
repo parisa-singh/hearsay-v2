@@ -1,10 +1,8 @@
 import { useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import SearchBar from '../components/search/SearchBar'
-import DivergenceAlert from '../components/results/DivergenceAlert'
-import ReviewTabs from '../components/results/ReviewTabs'
-import ComparisonChart from '../components/results/ComparisonChart'
-import MediaCard from '../components/results/MediaCard'
+import ResultsViewMenu from '../components/results/ResultsViewMenu'
+import { DashboardLayout, TabbedLayout, BentoLayout } from '../components/results/ResultsLayouts'
 import { useAllPlatforms } from '../hooks/useAllPlatforms'
 import { useUIStore } from '../store/uiStore'
 import { calculateDivergence } from '../utils/divergence'
@@ -13,7 +11,9 @@ export default function ResultsPage() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? null
-  const { location, addToHistory } = useUIStore()
+  const location = useUIStore(s => s.location)
+  const addToHistory = useUIStore(s => s.addToHistory)
+  const resultsLayout = useUIStore(s => s.resultsLayout)
 
   const [refreshCount, setRefreshCount] = useState(0)
   const [copied, setCopied] = useState(false)
@@ -23,7 +23,6 @@ export default function ResultsPage() {
   }, [query, category, addToHistory])
 
   const { results, isAnyLoading, successfulResults } = useAllPlatforms(query, category, refreshCount)
-
   const ratedResults = successfulResults.filter(r => r.data?.rating != null)
   const divergence = calculateDivergence(successfulResults)
 
@@ -31,21 +30,25 @@ export default function ResultsPage() {
     navigator.clipboard.writeText(window.location.href).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    })
+    }).catch(() => {})
   }
-
   function handleRefresh() {
     setRefreshCount(c => c + 1)
   }
 
+  const layoutProps = { results, ratedResults, successfulResults, isAnyLoading, divergence, query, location }
+  const Layout = resultsLayout === 'dashboard' ? DashboardLayout
+    : resultsLayout === 'bento' ? BentoLayout
+    : TabbedLayout
+
   return (
     <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-5 sm:py-8 space-y-6 sm:space-y-8">
-      {/* Compact search bar */}
+      {/* Search */}
       <div className="max-w-2xl">
         <SearchBar initialValue={query} initialCategory={category} compact />
       </div>
 
-      {/* Header: query + compact toolbar */}
+      {/* Header + toolbar */}
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <h1 className="text-lg sm:text-2xl font-semibold text-white">
@@ -59,7 +62,6 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* Toolbar: refresh + share, grouped */}
         <div className="flex items-center gap-1.5 shrink-0">
           {!isAnyLoading && (
             <button
@@ -74,6 +76,9 @@ export default function ResultsPage() {
               </svg>
             </button>
           )}
+
+          <ResultsViewMenu />
+
           <button
             onClick={handleShare}
             className={`flex items-center gap-1.5 text-xs font-medium px-3 h-8 rounded-lg border transition-all ${
@@ -103,40 +108,8 @@ export default function ResultsPage() {
         </div>
       </header>
 
-      {/* Divergence alert */}
-      {divergence.detected && !isAnyLoading && (
-        <DivergenceAlert divergence={divergence} />
-      )}
-
-      {/* Platform comparison chart — shows as soon as 2 ratings are in,
-          then fills in progressively (not gated on the slowest platform). */}
-      {ratedResults.length >= 2 && (
-        <ComparisonChart results={ratedResults} />
-      )}
-
-      {/* Honest low-coverage note: results exist but too few numeric ratings to compare */}
-      {!isAnyLoading && successfulResults.length > 0 && ratedResults.length < 2 && (
-        <p className="text-xs text-zinc-500 border border-zinc-800 rounded-lg px-4 py-3">
-          Only {ratedResults.length} platform{ratedResults.length !== 1 ? 's' : ''} returned a
-          numeric rating — at least 2 are needed to show the comparison. The reviews below still apply.
-        </p>
-      )}
-
-      {/* Reviews by platform — the evidence */}
-      <section className="space-y-3 sm:space-y-4">
-        <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-          Reviews by platform
-        </h2>
-        <ReviewTabs
-          globalResults={results}
-          localResults={results}
-          query={query}
-          location={location}
-        />
-      </section>
-
-      {/* Media — supporting photos & videos, at the bottom */}
-      <MediaCard results={results} />
+      {/* Selected layout */}
+      <Layout {...layoutProps} />
     </main>
   )
 }

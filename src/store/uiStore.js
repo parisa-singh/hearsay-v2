@@ -52,6 +52,12 @@ export const useUIStore = create(
       location: null,
       setLocation: (loc) => set({ location: loc }),
       clearLocation: () => set({ location: null }),
+
+      // Results view preference (per-visitor, persisted)
+      resultsLayout: 'tabbed',   // 'dashboard' | 'tabbed' | 'bento'
+      setResultsLayout: (layout) => set({ resultsLayout: layout }),
+      bentoDensity: 'comfy',     // 'compact' | 'comfy' | 'airy'
+      setBentoDensity: (density) => set({ bentoDensity: density }),
     }),
     {
       name: 'hearsay-ui',
@@ -66,6 +72,8 @@ export const useUIStore = create(
         searchHistory: state.searchHistory,
         theme: state.theme,
         location: state.location,
+        resultsLayout: state.resultsLayout,
+        bentoDensity: state.bentoDensity,
       }),
     }
   )
