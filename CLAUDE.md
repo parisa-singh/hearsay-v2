@@ -10,11 +10,25 @@ Read this file first before doing anything else in a new session.
 This repo (`hearsay-v2`) is a **fork of v1**, created 2026-10-06 to freeze the shipped v1 and iterate freely. Full v1 git history is preserved below the fork commit.
 
 - **v1 stays live and untouched** at https://parisa-singh.github.io/hearsay (repo `parisa-singh/hearsay`). Don't change v1 from here.
-- **v2 has its OWN Cloudflare Worker** (`hearsay-v2-api`, deployed 2026-10-07) at `https://hearsay-v2-api.parisa-singh.workers.dev` — isolated from v1's `hearsay-api`. Secrets set: `GOOGLE_API_KEY`, `YOUTUBE_API_KEY`, `SERPAPI_KEY`. **Not set:** `REDDIT_CLIENT_ID`/`SECRET` (Reddit card errors quietly until added — kept integrated on purpose) and `YELP_API_KEY` (v1's trial expired; Yelp disabled until renewed). SerpAPI/YouTube quotas are still shared at the **API-key level** (same keys as v1). `wrangler deploy` from v2 now hits only `hearsay-v2-api`; v1 is untouched.
-- **GA4 is intentionally unset** in v2 so its traffic doesn't mix into v1's property (`G-M63F6NVM6J`). Create a dedicated v2 GA4 stream and set `VITE_GA_MEASUREMENT_ID` (repo secret + `.env.local`) when wanted.
+- **v2 has its OWN Cloudflare Worker** (`hearsay-v2-api`, deployed 2026-10-07) at `https://hearsay-v2-api.parisa-singh.workers.dev` — isolated from v1's `hearsay-api`. Secrets set: `GOOGLE_API_KEY`, `YOUTUBE_API_KEY`, `SERPAPI_KEY`. **Not set:** `REDDIT_CLIENT_ID`/`SECRET` and `YELP_API_KEY` (v1 trial expired). SerpAPI/YouTube quotas still shared at the **API-key level** (same keys as v1). `wrangler deploy` from v2 hits only `hearsay-v2-api`; v1 untouched.
+- **Reddit is marked `working: false`** in `platforms.js` (creds pending/not approved). Effect: greyed "Down" chip, sorted to the END of the Pull-from row, and **not queried** (`useAllPlatforms` skips `working === false`). Still `integrated: true` so tests pass. To re-enable: remove the `working: false` line once creds are set. **Yelp** also effectively down (trial expired) but still queried (card hidden on error).
+- ⭐ **NEXT STEP — GA4 analytics for v2.** Plumbing is ready (`src/utils/analytics.js`, `initGA` in `main.jsx`, page_view in `Layout.jsx`, `search` event in `SearchBar.jsx`), gated on `VITE_GA_MEASUREMENT_ID` (currently unset = no-op). To turn on visitor tracking: create a **dedicated v2 GA4 web stream**, then set `VITE_GA_MEASUREMENT_ID` as a **repo secret** (`gh secret set`) AND in `.env.local`, and redeploy. (Reusing v1's `G-M63F6NVM6J` works but mixes v1+v2 traffic.) GA4 then shows Users / sessions / avg engagement time + the custom `search` event.
 - Base path is `/hearsay-v2/` (vite `base`, router `basename`, 404 redirect).
-- **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — 34/34 pass.
+- **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — **42/42 pass**.
 - Deploy pipeline is live: push to `main` → Actions → Pages. The `gh` token now has `workflow` scope (added 2026-10-06), so workflow files push from the CLI without the web-editor workaround.
+
+---
+
+## ⚠️ v2 Redesign (Oct 2026) — current look & behavior
+
+v2 diverges from v1 visually and in the results UX. Key pieces:
+
+- **Design system** (`src/index.css` tokens): layered **blue-black** bg (`--bg #06070b`) with glassy translucent panels (`.panel-glass`), **teal `--accent #4df0d0`** (+ violet/coral), hairline `--line` borders. Fonts: **Fraunces** (display, `font-display`), **Inter** (body), **JetBrains Mono** (`font-mono` labels). Loaded in `index.html`; Tailwind has `display`/`mono`/`accent`. Root div bg is transparent so the body gradient shows app-wide.
+- **Narrative intro** (`src/components/intro/HearsayIntro.jsx` + `intro.css`): full-screen story — *hearsay* → splits into *hear*/*say* → *why hearsay?* → zoom-out to 4 bubbles → camera tours each (typing/glitch/radar-ping/scanline/crack) → **expands into the site**. Rendered globally from `Layout.jsx` via Zustand `introPlaying`; auto-plays **once per session** (`sessionStorage 'hs-intro-seen'`); **replay via the header "?"**. Pause/prev/next/dots/skip; respects reduced-motion.
+- **Results view switcher** (`ResultsViewSwitcher.jsx`, floating text menu, `.hsview` grey/white-glow-active/hover-glow): three **distinct** views in `ResultsLayouts.jsx` — **Dashboard** (DEFAULT; at-a-glance overview: divergence + comparison + dense per-platform rows with source links), **Bento** (everything on one scroll, balanced card grid via `reviewCols`: 2→2, 3→3, 4→2+2, 5→3+2; density options removed — comfy only), **Tabbed** (Overview/Reviews/Media tabs). Cross-fade (`.view-enter`) on switch. Layout/`bentoDensity` persisted in `uiStore`.
+- **Homepage**: Fraunces hero, glassy search card (teal pills + teal glowing Search button), single-row wrapping Pull-from chips, compact greyed "Coming soon" row (3 + hover "+N more"). **About page** fully restyled in the new language.
+- **ComparisonChart**: bars (capped, interactive hover tooltips) beside a larger single-series radar (shown only at ≥3 rated); exports `ComparisonBlock` (handles the low-coverage note).
+- **SerpAPI structured ratings**: `workers/src/utils/serpapiRating.js` reads SerpAPI rich-snippet `rating`/`reviews` (used by tripadvisor + trustpilot) so TripAdvisor/Trustpilot contribute real ratings beyond Google.
 
 ---
 
@@ -32,7 +46,7 @@ This repo (`hearsay-v2`) is a **fork of v1**, created 2026-10-06 to freeze the s
 
 **Live URL (v2)**: https://parisa-singh.github.io/hearsay-v2  
 **Live URL (v1, frozen)**: https://parisa-singh.github.io/hearsay  
-**Worker URL (shared with v1)**: https://hearsay-api.parisa-singh.workers.dev  
+**Worker URL (v2)**: https://hearsay-v2-api.parisa-singh.workers.dev  
 **GitHub (v2)**: https://github.com/parisa-singh/hearsay-v2  
 **GitHub (v1)**: https://github.com/parisa-singh/hearsay  
 **Builder**: Parisa Singh — https://www.linkedin.com/in/parisa-singh/
