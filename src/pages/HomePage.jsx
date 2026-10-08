@@ -64,8 +64,10 @@ export default function HomePage() {
           <LocationBadge />
         </div>
 
-        {/* Search bar with category pills */}
-        <SearchBar />
+        {/* Search bar with category pills — in a glass card */}
+        <div className="panel-glass p-4 sm:p-5">
+          <SearchBar />
+        </div>
 
         {/* Platform toggles — below search bar */}
         <div className="pt-1">

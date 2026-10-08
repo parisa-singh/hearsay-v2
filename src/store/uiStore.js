@@ -54,7 +54,7 @@ export const useUIStore = create(
       clearLocation: () => set({ location: null }),
 
       // Results view preference (per-visitor, persisted)
-      resultsLayout: 'tabbed',   // 'dashboard' | 'tabbed' | 'bento'
+      resultsLayout: 'dashboard',   // 'dashboard' | 'tabbed' | 'bento'
       setResultsLayout: (layout) => set({ resultsLayout: layout }),
       bentoDensity: 'comfy',     // 'compact' | 'comfy' | 'airy'
       setBentoDensity: (density) => set({ bentoDensity: density }),

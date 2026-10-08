@@ -41,8 +41,8 @@ export default function SearchBar({ initialValue = '', initialCategory = null, c
               className={`
                 px-3 py-1.5 text-xs sm:text-sm rounded-full border font-medium transition-all duration-150
                 ${category === c.id
-                  ? 'border-white bg-white text-zinc-900 shadow-sm'
-                  : 'border-zinc-600 bg-zinc-800 text-zinc-300 hover:border-zinc-400 hover:text-white'
+                  ? 'border-transparent bg-accent text-[#04110f] font-semibold shadow-[0_0_24px_-8px_var(--glow)]'
+                  : 'border-zinc-700 bg-[var(--panel)] text-[var(--ink-2)] hover:border-zinc-500 hover:text-white'
                 }
               `}
             >
@@ -68,8 +68,8 @@ export default function SearchBar({ initialValue = '', initialCategory = null, c
               onChange={e => setValue(e.target.value)}
               placeholder={compact ? 'Search again…' : 'Search for a restaurant, product, or place…'}
               className={`
-                w-full pl-9 sm:pl-11 pr-3 sm:pr-4 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100
-                placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500
+                w-full pl-9 sm:pl-11 pr-3 sm:pr-4 bg-[var(--bg-3)] border border-[var(--line)] rounded-xl text-zinc-100
+                placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent/50
                 focus:border-transparent transition-all text-sm sm:text-base
                 ${compact ? 'py-2.5' : 'py-3 sm:py-4'}
               `}
@@ -81,9 +81,9 @@ export default function SearchBar({ initialValue = '', initialCategory = null, c
             type="submit"
             disabled={!canSubmit}
             className={`
-              flex-shrink-0 bg-white text-zinc-900 font-medium rounded-xl
-              hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed
-              transition-all text-sm sm:text-base
+              flex-shrink-0 bg-accent text-[#04110f] font-semibold rounded-xl
+              hover:brightness-105 disabled:opacity-40 disabled:cursor-not-allowed
+              shadow-[0_0_30px_-8px_var(--glow)] transition-all text-sm sm:text-base
               ${compact ? 'px-3 sm:px-4 py-2.5' : 'px-4 sm:px-6 py-3 sm:py-4'}
             `}
           >

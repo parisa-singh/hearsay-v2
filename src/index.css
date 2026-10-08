@@ -24,6 +24,8 @@
     --warm: #ff6b4a;
     --gold: #ffce54;
     --glow: #4df0d08c;
+    --shadow: 0 30px 80px #0009;
+    --on-accent: #04110f;
     /* type + motion */
     --display: 'Fraunces', Georgia, 'Times New Roman', serif;
     --sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -85,6 +87,16 @@
 }
 
 /* floating view switcher: grey by default, green glow on hover, white + glow when active */
+/* glassy panel (hero search card, etc.) */
+.panel-glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
 .hsview {
   color: var(--mut);
   background: transparent;
