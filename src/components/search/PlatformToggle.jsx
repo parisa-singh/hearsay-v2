@@ -8,12 +8,11 @@ function IntegratedChip({ p, enabled, onToggle, animIndex, disabled }) {
     return (
       <div
         style={{ animationDelay: `${animIndex * 60}ms` }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-600 opacity-60 cursor-not-allowed animate-slide-up shrink-0"
+        className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-600 opacity-50 cursor-not-allowed animate-slide-up shrink-0"
         title={`${p.displayName} — not available right now`}
       >
-        <img src={p.logo} alt="" width={13} height={13} className="rounded-sm opacity-20" onError={e => { e.target.style.display = 'none' }} />
+        <img src={p.logo} alt="" width={11} height={11} className="rounded-sm opacity-20 grayscale" onError={e => { e.target.style.display = 'none' }} />
         <span>{p.displayName}</span>
-        <span className="text-[10px] bg-zinc-800 text-zinc-500 px-1 py-0.5 rounded font-normal leading-none">Down</span>
       </div>
     )
   }
@@ -21,7 +20,7 @@ function IntegratedChip({ p, enabled, onToggle, animIndex, disabled }) {
     <button
       onClick={() => onToggle(p.id)}
       style={{ animationDelay: `${animIndex * 60}ms` }}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all duration-200 animate-slide-up shrink-0 ${
+      className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-200 animate-slide-up shrink-0 ${
         enabled
           ? 'border-green-700/50 bg-green-950/40 text-green-300'
           : 'border-zinc-800 bg-zinc-900/50 text-zinc-600 hover:border-zinc-700 hover:text-zinc-400'
@@ -30,8 +29,8 @@ function IntegratedChip({ p, enabled, onToggle, animIndex, disabled }) {
       <img
         src={p.logo}
         alt=""
-        width={13}
-        height={13}
+        width={11}
+        height={11}
         className={`rounded-sm ${enabled ? 'opacity-100' : 'opacity-30'}`}
         onError={e => { e.target.style.display = 'none' }}
       />
@@ -44,21 +43,18 @@ function ComingSoonChip({ p, animIndex }) {
   return (
     <div
       style={{ animationDelay: `${animIndex * 60}ms` }}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-700 opacity-60 cursor-not-allowed animate-slide-up"
+      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-600 opacity-60 cursor-not-allowed animate-slide-up"
       title={`${p.displayName} — coming soon`}
     >
       <img
         src={p.logo}
         alt=""
-        width={13}
-        height={13}
-        className="rounded-sm opacity-20"
+        width={10}
+        height={10}
+        className="rounded-sm opacity-20 grayscale"
         onError={e => { e.target.style.display = 'none' }}
       />
       <span>{p.displayName}</span>
-      <span className="text-[10px] bg-zinc-800 text-zinc-500 px-1 py-0.5 rounded font-normal leading-none">
-        Soon
-      </span>
     </div>
   )
 }
@@ -93,7 +89,7 @@ export default function PlatformToggle() {
     const soonRest = allSoon.slice(3)
     return (
       <div className="space-y-2.5">
-        <div className="flex flex-nowrap gap-2 justify-center overflow-x-auto scrollbar-hide pb-1">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           {integrated.map(p => (
             <IntegratedChip
               key={p.id}
@@ -118,7 +114,7 @@ export default function PlatformToggle() {
               <div className="relative group">
                 <button
                   type="button"
-                  className="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors cursor-default"
+                  className="px-2 py-0.5 rounded-full text-[10px] font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors cursor-default"
                   aria-label={`${soonRest.length} more coming soon`}
                 >
                   +{soonRest.length} more
@@ -173,7 +169,7 @@ export default function PlatformToggle() {
         </p>
 
         {/* Integrated platforms row */}
-        <div key={countryCode} className="flex flex-nowrap gap-2 justify-center overflow-x-auto scrollbar-hide pb-1">
+        <div key={countryCode} className="flex flex-wrap gap-1.5 justify-center">
           {integrated.map((p, i) => (
             <IntegratedChip
               key={p.id}
