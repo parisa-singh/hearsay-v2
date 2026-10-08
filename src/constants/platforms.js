@@ -29,6 +29,7 @@ export const PLATFORMS = [
     defaultEnabled: true,
     supportsLocation: true,
     integrated: true,
+    working: false, // API creds pending — greyed out and not queried for now
   },
   {
     id: 'youtube',

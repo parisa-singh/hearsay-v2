@@ -8,7 +8,7 @@ export function useAllPlatforms(query, category = null, refreshCount = 0) {
   const { isPlatformEnabled, location } = useUIStore()
 
   const enabledPlatforms = PLATFORMS.filter(
-    p => p.integrated && isPlatformEnabled(p.id)
+    p => p.integrated && p.working !== false && isPlatformEnabled(p.id)
   )
 
   const locationParams = location

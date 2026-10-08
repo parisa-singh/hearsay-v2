@@ -3,12 +3,25 @@ import { useUIStore } from '../../store/uiStore'
 import { PLATFORM_MAP, PLATFORMS } from '../../constants/platforms'
 import { getPlatformTiers } from '../../utils/platformRegions'
 
-function IntegratedChip({ p, enabled, onToggle, animIndex }) {
+function IntegratedChip({ p, enabled, onToggle, animIndex, disabled }) {
+  if (disabled) {
+    return (
+      <div
+        style={{ animationDelay: `${animIndex * 60}ms` }}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-600 opacity-60 cursor-not-allowed animate-slide-up shrink-0"
+        title={`${p.displayName} — not available right now`}
+      >
+        <img src={p.logo} alt="" width={13} height={13} className="rounded-sm opacity-20" onError={e => { e.target.style.display = 'none' }} />
+        <span>{p.displayName}</span>
+        <span className="text-[10px] bg-zinc-800 text-zinc-500 px-1 py-0.5 rounded font-normal leading-none">Down</span>
+      </div>
+    )
+  }
   return (
     <button
       onClick={() => onToggle(p.id)}
       style={{ animationDelay: `${animIndex * 60}ms` }}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all duration-200 animate-slide-up ${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-all duration-200 animate-slide-up shrink-0 ${
         enabled
           ? 'border-green-700/50 bg-green-950/40 text-green-300'
           : 'border-zinc-800 bg-zinc-900/50 text-zinc-600 hover:border-zinc-700 hover:text-zinc-400'
@@ -74,12 +87,13 @@ export default function PlatformToggle() {
   // No location: working platforms, then a greyed "coming soon" line (3 + more)
   if (!countryCode) {
     const integrated = PLATFORMS.filter(p => p.integrated)
+      .sort((a, b) => (a.working === false ? 1 : 0) - (b.working === false ? 1 : 0))
     const allSoon = PLATFORMS.filter(p => !p.integrated)
     const soonShown = allSoon.slice(0, 3)
     const soonRest = allSoon.slice(3)
     return (
       <div className="space-y-2.5">
-        <div className="flex flex-wrap gap-2 justify-center">
+        <div className="flex flex-nowrap gap-2 justify-center overflow-x-auto scrollbar-hide pb-1">
           {integrated.map(p => (
             <IntegratedChip
               key={p.id}
@@ -87,6 +101,7 @@ export default function PlatformToggle() {
               enabled={isPlatformEnabled(p.id)}
               onToggle={togglePlatform}
               animIndex={0}
+              disabled={p.working === false}
             />
           ))}
         </div>
@@ -132,6 +147,7 @@ export default function PlatformToggle() {
   const regionalPlatforms = (regionalIds ?? []).map(id => PLATFORM_MAP[id]).filter(Boolean)
 
   const integrated = regionalPlatforms.filter(p => p.integrated)
+    .sort((a, b) => (a.working === false ? 1 : 0) - (b.working === false ? 1 : 0))
   const comingSoon = regionalPlatforms.filter(p => !p.integrated)
 
   return (
@@ -157,7 +173,7 @@ export default function PlatformToggle() {
         </p>
 
         {/* Integrated platforms row */}
-        <div key={countryCode} className="flex flex-wrap gap-2 justify-center">
+        <div key={countryCode} className="flex flex-nowrap gap-2 justify-center overflow-x-auto scrollbar-hide pb-1">
           {integrated.map((p, i) => (
             <IntegratedChip
               key={p.id}
@@ -165,6 +181,7 @@ export default function PlatformToggle() {
               enabled={isPlatformEnabled(p.id)}
               onToggle={togglePlatform}
               animIndex={i}
+              disabled={p.working === false}
             />
           ))}
         </div>
