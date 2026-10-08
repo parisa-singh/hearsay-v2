@@ -71,12 +71,14 @@ export default function PlatformToggle() {
     }
   }, [countryCode])
 
-  // No location: working platforms, then a greyed "coming soon" line
+  // No location: working platforms, then a greyed "coming soon" line (3 + more)
   if (!countryCode) {
     const integrated = PLATFORMS.filter(p => p.integrated)
-    const comingSoon = PLATFORMS.filter(p => !p.integrated).slice(0, 8)
+    const allSoon = PLATFORMS.filter(p => !p.integrated)
+    const soonShown = allSoon.slice(0, 3)
+    const soonRest = allSoon.slice(3)
     return (
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div className="flex flex-wrap gap-2 justify-center">
           {integrated.map(p => (
             <IntegratedChip
@@ -89,16 +91,37 @@ export default function PlatformToggle() {
           ))}
         </div>
 
-        {comingSoon.length > 0 && (
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-center mb-2" style={{ color: 'var(--mut)' }}>
-              Coming soon
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {comingSoon.map((p, i) => (
-                <ComingSoonChip key={p.id} p={p} animIndex={i} />
-              ))}
-            </div>
+        {allSoon.length > 0 && (
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--mut)' }}>
+              Soon
+            </span>
+            {soonShown.map((p, i) => (
+              <ComingSoonChip key={p.id} p={p} animIndex={i} />
+            ))}
+            {soonRest.length > 0 && (
+              <div className="relative group">
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-900/30 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors cursor-default"
+                  aria-label={`${soonRest.length} more coming soon`}
+                >
+                  +{soonRest.length} more
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block group-focus-within:block z-20 w-56 rounded-xl border p-3 shadow-2xl"
+                  style={{ background: 'linear-gradient(180deg,#0a0c13,#06070b)', borderColor: 'var(--line)' }}
+                >
+                  <div className="font-mono text-[9px] uppercase tracking-[0.16em] mb-2" style={{ color: 'var(--mut)' }}>Also coming soon</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {soonRest.map(p => (
+                      <span key={p.id} className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: 'var(--line)', color: 'var(--ink-2)' }}>
+                        {p.displayName}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -38,15 +38,15 @@ export default function HomePage() {
 
   return (
     <>
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 sm:py-10">
       <SearchHistorySidebar />
 
       {/* Hero */}
-      <div className="text-center mb-6 sm:mb-10 max-w-2xl">
-        <p className="font-mono text-[11px] font-medium tracking-[0.22em] text-accent uppercase mb-5">
+      <div className="text-center mb-4 sm:mb-6 max-w-2xl">
+        <p className="font-mono text-[11px] font-medium tracking-[0.22em] text-accent uppercase mb-3">
           Cross-platform review truth
         </p>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-white mb-5" style={{ letterSpacing: '-0.02em' }}>
+        <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-white mb-3" style={{ letterSpacing: '-0.02em' }}>
           What are people{' '}
           <span className="italic font-medium text-accent">really</span>{' '}
           saying?
@@ -76,7 +76,7 @@ export default function HomePage() {
 
       {/* Example / recent searches */}
       {normalizedHistory.length === 0 ? (
-        <div className="mt-8 text-center">
+        <div className="mt-5 text-center">
           <p className="text-xs text-zinc-500 mb-3">Try searching for</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {EXAMPLE_SEARCHES.map(ex => (
@@ -91,7 +91,7 @@ export default function HomePage() {
           </div>
         </div>
       ) : (
-        <div className="mt-8 text-center w-full max-w-2xl">
+        <div className="mt-5 text-center w-full max-w-2xl">
           <div className="flex items-center justify-center gap-3 mb-3">
             <p className="text-sm font-medium text-zinc-300">Recent searches</p>
             <button
@@ -130,7 +130,7 @@ export default function HomePage() {
       )}
 
       {/* Available platforms strip */}
-      <div className="mt-6 sm:mt-12 w-full max-w-2xl">
+      <div className="mt-5 sm:mt-7 w-full max-w-2xl">
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-6 py-4">
           <p className="text-xs text-zinc-500 text-center mb-3 uppercase tracking-wider">Sources</p>
           <div className="flex items-center justify-center gap-5 flex-wrap">
