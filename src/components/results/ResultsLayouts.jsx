@@ -1,119 +1,140 @@
 import { useState } from 'react'
-import { useUIStore } from '../../store/uiStore'
 import DivergenceAlert from './DivergenceAlert'
 import { ComparisonBlock } from './ComparisonChart'
 import ReviewTabs from './ReviewTabs'
 import MediaCard from './MediaCard'
 import PlatformCard from './PlatformCard'
 
-const SECTION_LABEL = 'text-xs font-semibold text-zinc-500 uppercase tracking-wider'
-
 function Divergence({ divergence, isAnyLoading }) {
   if (!divergence?.detected || isAnyLoading) return null
   return <DivergenceAlert divergence={divergence} />
 }
 
-// ─── 1. Dashboard ─────────────────────────────────────────────────────────
-export function DashboardLayout({ results, ratedResults, successfulResults, isAnyLoading, divergence, query, location }) {
-  return (
-    <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      <aside className="lg:sticky lg:top-4 self-start space-y-4">
-        <Divergence divergence={divergence} isAnyLoading={isAnyLoading} />
-        <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />
-        <MediaCard results={results} />
-      </aside>
-      <section className="space-y-3 sm:space-y-4 min-w-0">
-        <h2 className={SECTION_LABEL}>Reviews by platform</h2>
-        <ReviewTabs globalResults={results} localResults={results} query={query} location={location} />
-      </section>
-    </div>
-  )
-}
-
-// ─── 2. Tabbed ────────────────────────────────────────────────────────────
-const TABS = [['overview', 'Overview'], ['reviews', 'Reviews'], ['media', 'Photos & Videos']]
-
-export function TabbedLayout({ results, ratedResults, successfulResults, isAnyLoading, divergence, query, location }) {
-  const [tab, setTab] = useState('overview')
-  return (
-    <div className="space-y-4">
-      <Divergence divergence={divergence} isAnyLoading={isAnyLoading} />
-      <div className="flex gap-1 border-b border-zinc-800 overflow-x-auto">
-        {TABS.map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`px-3 sm:px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all shrink-0 ${
-              tab === id ? 'border-white text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'overview' && (
-        <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />
-      )}
-      {tab === 'reviews' && (
-        <ReviewTabs globalResults={results} localResults={results} query={query} location={location} />
-      )}
-      {tab === 'media' && <MediaCard results={results} />}
-    </div>
-  )
-}
-
-// ─── 3. Bento ─────────────────────────────────────────────────────────────
-// Literal class strings so Tailwind's JIT picks them up (no runtime concat).
-const BENTO_GRID = {
-  compact: 'grid grid-cols-2 md:grid-cols-4 gap-3 items-start',
-  comfy: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start',
-  airy: 'grid grid-cols-1 sm:grid-cols-2 gap-6 items-start',
-}
-const BENTO_HERO = {
-  compact: 'col-span-2',
-  comfy: 'col-span-full',
-  airy: 'col-span-full',
-}
-
-function bentoVisible(results) {
+function visibleSorted(results) {
   const score = r => (r.isError ? 2 : r.isLoading ? 1 : r.data && (r.data.rating != null || (r.data.reviews?.length ?? 0) > 0) ? 0 : 2)
   return results
     .filter(r => r.isLoading || (!r.isError && (r.data?.rating != null || (r.data?.reviews?.length ?? 0) > 0)))
     .sort((a, b) => score(a) - score(b))
 }
 
-export function BentoLayout({ results, ratedResults, successfulResults, isAnyLoading, divergence, query }) {
-  const density = useUIStore(s => s.bentoDensity)
-  const grid = BENTO_GRID[density] ?? BENTO_GRID.comfy
-  const hero = BENTO_HERO[density] ?? BENTO_HERO.comfy
-  const cards = bentoVisible(results)
+// Balanced columns so the last row never has a lone card:
+// 2 -> 2, 3 -> 3, 4 -> 2 (2+2), 5 -> 3 (3+2), 6+ -> 3.
+function reviewCols(n) {
+  if (n <= 1) return 1
+  if (n === 2) return 2
+  if (n === 3) return 3
+  if (n === 4) return 2
+  return 3
+}
+
+// ─── 1. Dashboard — overview, all the details at a glance ───────────────────
+export function DashboardLayout({ ratedResults, successfulResults, isAnyLoading, divergence }) {
+  const rows = successfulResults
+    .filter(r => r.data && (r.data.rating != null || (r.data.reviews?.length ?? 0) > 0))
+    .sort((a, b) => (b.data?.rating ?? -1) - (a.data?.rating ?? -1))
 
   return (
-    <div className={grid}>
-      {divergence?.detected && !isAnyLoading && (
-        <div className={hero}><DivergenceAlert divergence={divergence} /></div>
-      )}
+    <div className="space-y-4 min-w-0">
+      <Divergence divergence={divergence} isAnyLoading={isAnyLoading} />
+      <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />
 
-      {(ratedResults.length >= 2 || (!isAnyLoading && successfulResults.length > 0)) && (
-        <div className={hero}>
-          <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />
-        </div>
-      )}
+      <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--line)', background: 'var(--panel)' }}>
+        {rows.length === 0 && !isAnyLoading && (
+          <p className="px-4 py-4 text-sm" style={{ color: 'var(--mut)' }}>No results yet.</p>
+        )}
+        {rows.map(({ platform, data }) => {
+          const rating = data?.rating
+          const link = data?.sourceUrl || null
+          return (
+            <div key={platform.id} className="flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b last:border-b-0 min-w-0" style={{ borderColor: 'var(--line)' }}>
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: platform.brandColor }} />
+              <span className="text-sm font-medium truncate min-w-0" style={{ color: 'var(--ink)' }}>{platform.displayName}</span>
+              {rating != null ? (
+                <div className="flex items-center gap-2 ml-auto shrink-0">
+                  <div className="w-16 sm:w-28 h-1.5 rounded-full overflow-hidden" style={{ background: '#ffffff14' }}>
+                    <div className="h-full rounded-full" style={{ width: `${(rating / 5) * 100}%`, background: platform.brandColor }} />
+                  </div>
+                  <span className="font-mono text-xs w-7 text-right tabular-nums" style={{ color: 'var(--ink)' }}>{Number(rating).toFixed(1)}</span>
+                </div>
+              ) : (
+                <span className="ml-auto text-xs shrink-0" style={{ color: 'var(--mut)' }}>mentions</span>
+              )}
+              {link ? (
+                <a href={link} target="_blank" rel="noopener noreferrer" className="shrink-0 text-xs font-medium whitespace-nowrap" style={{ color: 'var(--accent)' }}>View ↗</a>
+              ) : (
+                <span className="shrink-0 w-[42px]" aria-hidden="true" />
+              )}
+            </div>
+          )
+        })}
+      </div>
 
-      {cards.map(({ platform, data, isLoading, isError, error }) => (
-        <PlatformCard
-          key={platform.id}
-          platformId={platform.id}
-          data={data}
-          isLoading={isLoading}
-          isError={isError}
-          error={error}
-          query={query}
-        />
-      ))}
+      <p className="text-xs text-center pt-1" style={{ color: 'var(--mut)' }}>
+        This is the quick overview — switch to{' '}
+        <span style={{ color: 'var(--accent)' }}>Bento</span> or{' '}
+        <span style={{ color: 'var(--accent)' }}>Tabbed</span> for full reviews and more detail.
+      </p>
+    </div>
+  )
+}
 
-      <div className={hero}><MediaCard results={results} /></div>
+// ─── 2. Tabbed — split into tabs ────────────────────────────────────────────
+const TABS = [['overview', 'Overview'], ['reviews', 'Reviews'], ['media', 'Photos & Videos']]
+
+export function TabbedLayout({ results, ratedResults, successfulResults, isAnyLoading, divergence, query, location }) {
+  const [tab, setTab] = useState('overview')
+  return (
+    <div className="space-y-4 min-w-0">
+      <Divergence divergence={divergence} isAnyLoading={isAnyLoading} />
+      <div className="flex gap-1 border-b overflow-x-auto" style={{ borderColor: 'var(--line)' }}>
+        {TABS.map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`px-3 sm:px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-all shrink-0 ${
+              tab === id ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+            style={{ borderColor: tab === id ? 'var(--accent)' : 'transparent' }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div key={tab} className="view-enter min-w-0">
+        {tab === 'overview' && <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />}
+        {tab === 'reviews' && <ReviewTabs globalResults={results} localResults={results} query={query} location={location} />}
+        {tab === 'media' && <MediaCard results={results} />}
+      </div>
+    </div>
+  )
+}
+
+// ─── 3. Bento — all the details on one scrollable page, balanced cards ──────
+export function BentoLayout({ results, ratedResults, successfulResults, isAnyLoading, divergence, query }) {
+  const cards = visibleSorted(results)
+  const cols = reviewCols(cards.length)
+
+  return (
+    <div className="space-y-4 min-w-0">
+      <Divergence divergence={divergence} isAnyLoading={isAnyLoading} />
+      <ComparisonBlock ratedResults={ratedResults} successfulResults={successfulResults} isAnyLoading={isAnyLoading} />
+
+      <div className="hs-cards" style={{ '--cols': cols, '--cols-sm': Math.min(cols, 2) }}>
+        {cards.map(({ platform, data, isLoading, isError, error }) => (
+          <PlatformCard
+            key={platform.id}
+            platformId={platform.id}
+            data={data}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            query={query}
+          />
+        ))}
+      </div>
+
+      <MediaCard results={results} />
     </div>
   )
 }

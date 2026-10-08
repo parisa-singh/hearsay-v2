@@ -71,20 +71,36 @@ export default function PlatformToggle() {
     }
   }, [countryCode])
 
-  // No location: flat list of integrated platforms only
+  // No location: working platforms, then a greyed "coming soon" line
   if (!countryCode) {
     const integrated = PLATFORMS.filter(p => p.integrated)
+    const comingSoon = PLATFORMS.filter(p => !p.integrated).slice(0, 8)
     return (
-      <div className="flex flex-wrap gap-2 justify-center">
-        {integrated.map(p => (
-          <IntegratedChip
-            key={p.id}
-            p={p}
-            enabled={isPlatformEnabled(p.id)}
-            onToggle={togglePlatform}
-            animIndex={0}
-          />
-        ))}
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {integrated.map(p => (
+            <IntegratedChip
+              key={p.id}
+              p={p}
+              enabled={isPlatformEnabled(p.id)}
+              onToggle={togglePlatform}
+              animIndex={0}
+            />
+          ))}
+        </div>
+
+        {comingSoon.length > 0 && (
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-center mb-2" style={{ color: 'var(--mut)' }}>
+              Coming soon
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {comingSoon.map((p, i) => (
+                <ComingSoonChip key={p.id} p={p} animIndex={i} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }

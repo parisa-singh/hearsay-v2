@@ -58,6 +58,10 @@ export const useUIStore = create(
       setResultsLayout: (layout) => set({ resultsLayout: layout }),
       bentoDensity: 'comfy',     // 'compact' | 'comfy' | 'airy'
       setBentoDensity: (density) => set({ bentoDensity: density }),
+
+      // Intro animation playback (not persisted) — replayable from the header
+      introPlaying: false,
+      setIntroPlaying: (v) => set({ introPlaying: v }),
     }),
     {
       name: 'hearsay-ui',

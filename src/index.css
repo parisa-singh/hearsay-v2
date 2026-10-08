@@ -3,16 +3,34 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-zinc-950 text-zinc-100 font-sans antialiased;
-    margin: 0;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
   :root {
+    /* surfaces — layered blue-black */
+    --bg: #06070b;
+    --bg-2: #0a0c13;
+    --bg-3: #10131d;
+    --panel: #ffffff09;
+    --panel-2: #ffffff12;
+    /* text */
+    --ink: #eaf0f7;
+    --ink-2: #aab6c7;
+    --mut: #6b7689;
+    --faint: #3a4252;
+    /* lines */
+    --line: #ffffff1a;
+    --line-2: #ffffff2b;
+    /* accents */
+    --accent: #4df0d0;
+    --accent-2: #8b7bff;
+    --warm: #ff6b4a;
+    --gold: #ffce54;
+    --glow: #4df0d08c;
+    /* type + motion */
+    --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --hs-ease: cubic-bezier(.22, .61, .36, 1);
+
+    /* platform brand colors */
     --platform-google: #4285F4;
     --platform-yelp: #FF1A1A;
     --platform-reddit: #FF4500;
@@ -20,6 +38,23 @@
     --platform-tripadvisor: #34E0A1;
     --platform-facebook: #1877F2;
     --platform-trustpilot: #00B67A;
+  }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    background:
+      radial-gradient(1100px 620px at 78% -8%, #4df0d010, transparent 60%),
+      radial-gradient(900px 520px at -5% 8%, #8b7bff0e, transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--bg-2));
+    background-attachment: fixed;
+  }
+
+  * {
+    box-sizing: border-box;
   }
 }
 
@@ -31,4 +66,44 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* smooth cross-fade when switching results views / tabs — no movement, so
+   the fixed elements (search, title, switcher, tabs) stay put */
+@keyframes viewIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.view-enter { animation: viewIn .3s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .view-enter { animation: none; }
+}
+
+/* floating view switcher: grey by default, green glow on hover, white + glow when active */
+.hsview {
+  color: var(--mut);
+  background: transparent;
+  border: none;
+  transition: color .2s, text-shadow .2s;
+}
+.hsview:hover { color: var(--accent); text-shadow: 0 0 16px var(--glow); }
+.hsview.on { color: #fff; text-shadow: 0 0 18px var(--glow); }
+
+/* balanced review-card grid: 1 col on phones, <=2 on tablets, exact count on desktop */
+.hs-cards {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .hs-cards { grid-template-columns: repeat(var(--cols-sm, 2), minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .hs-cards { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
 }

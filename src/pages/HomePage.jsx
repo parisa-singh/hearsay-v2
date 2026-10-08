@@ -21,7 +21,7 @@ function normalizeItem(item) {
 
 function itemHref(item) {
   const norm = normalizeItem(item)
-  const base = `/hearsay/results?q=${encodeURIComponent(norm.q)}`
+  const base = `${import.meta.env.BASE_URL}results?q=${encodeURIComponent(norm.q)}`
   return norm.category ? `${base}&category=${encodeURIComponent(norm.category)}` : base
 }
 
@@ -37,24 +37,23 @@ export default function HomePage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-16">
+    <>
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-16">
       <SearchHistorySidebar />
 
       {/* Hero */}
-      <div className="text-center mb-5 sm:mb-8 max-w-2xl">
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 uppercase mb-4">
-          Review Aggregator
+      <div className="text-center mb-6 sm:mb-10 max-w-2xl">
+        <p className="font-mono text-[11px] font-medium tracking-[0.22em] text-accent uppercase mb-5">
+          Cross-platform review truth
         </p>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-white mb-5" style={{ letterSpacing: '-0.02em' }}>
           What are people{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-300 to-zinc-500">
-            really
-          </span>{' '}
+          <span className="italic font-medium text-accent">really</span>{' '}
           saying?
         </h1>
         <p className="text-zinc-400 text-base sm:text-lg leading-relaxed">
           Search any restaurant, product, or place. Hearsay pulls real reviews from the platforms
-          people actually use in your part of the world — not just one algorithm's version.
+          people actually use in your part of the world, not just one algorithm's version.
         </p>
       </div>
 
@@ -151,6 +150,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

@@ -16,9 +16,15 @@ export default {
         tripadvisor: '#34E0A1',
         facebook: '#1877F2',
         trustpilot: '#00B67A',
+        // Brand accents
+        accent: '#4df0d0',
+        'accent-2': '#8b7bff',
+        warm: '#ff6b4a',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',
