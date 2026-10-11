@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUIStore } from '../../store/uiStore'
 import { trackEvent } from '../../utils/analytics'
@@ -6,15 +6,26 @@ import { trackEvent } from '../../utils/analytics'
 const CATEGORIES = [
   { id: 'restaurant', label: 'Restaurant / Café' },
   { id: 'product', label: 'Product' },
+  { id: 'electronics', label: 'Electronics' },
   { id: 'place', label: 'Place / Hotel' },
   { id: 'business', label: 'Business / Service' },
 ]
 
 export default function SearchBar({ initialValue = '', initialCategory = null, compact = false }) {
   const [value, setValue] = useState(initialValue)
-  const [category, setCategory] = useState(initialCategory)
+  // Category lives in the store so PlatformToggle can show category-specific
+  // Pull-from platforms as the user picks.
+  const category = useUIStore(s => s.searchCategory)
+  const setCategory = useUIStore(s => s.setSearchCategory)
   const navigate = useNavigate()
   const addToHistory = useUIStore(s => s.addToHistory)
+
+  // Seed the store from an initial category (e.g. when ResultsPage mounts a
+  // compact bar from the URL's ?category=).
+  useEffect(() => {
+    if (initialCategory) setCategory(initialCategory)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategory])
 
   const canSubmit = value.trim() !== '' && category !== null
 
@@ -37,7 +48,7 @@ export default function SearchBar({ initialValue = '', initialCategory = null, c
             <button
               key={c.id}
               type="button"
-              onClick={() => setCategory(prev => prev === c.id ? null : c.id)}
+              onClick={() => setCategory(category === c.id ? null : c.id)}
               className={`
                 px-3 py-1.5 text-xs sm:text-sm rounded-full border font-medium transition-all duration-150
                 ${category === c.id

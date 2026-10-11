@@ -58,3 +58,21 @@ export function getPlatformTiers(countryCode) {
     platforms: ['google', 'yelp', 'youtube', 'trustpilot', 'reddit', 'tripadvisor', 'facebook'],
   }
 }
+
+// Category → relevant platforms. The same idea as getPlatformTiers, but keyed
+// on what the user is searching for rather than where they are. When a category
+// is selected it drives the Pull-from row (and which platforms are queried);
+// vendor/retailer platforms only appear for product & electronics.
+const CATEGORY_PLATFORMS = {
+  restaurant:  ['google', 'yelp', 'tripadvisor', 'facebook', 'youtube', 'reddit'],
+  place:       ['google', 'tripadvisor', 'yelp', 'facebook', 'trustpilot', 'youtube'],
+  business:    ['google', 'trustpilot', 'yelp', 'facebook', 'youtube', 'reddit'],
+  product:     ['amazon', 'walmart', 'target', 'ebay', 'etsy', 'aliexpress', 'trustpilot', 'youtube', 'reddit'],
+  electronics: ['bestbuy', 'newegg', 'amazon', 'apple', 'samsung', 'trustpilot', 'youtube', 'reddit'],
+}
+
+// Returns the ordered platform-id list for a category, or null when the
+// category is unknown (so callers fall back to the location/default tiers).
+export function getCategoryPlatforms(category) {
+  return CATEGORY_PLATFORMS[category] ?? null
+}

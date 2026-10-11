@@ -1,9 +1,14 @@
+// Logo URLs are resolved against Vite's base (import.meta.env.BASE_URL,
+// '/hearsay-v2/') so assets load from this app's own /public/logos in every
+// environment — dev and the deployed GitHub Pages subpath alike.
+const logoUrl = (file) => `${import.meta.env.BASE_URL}logos/${file}`
+
 export const PLATFORMS = [
   // ── Integrated platforms ──────────────────────────────────────────────────
   {
     id: 'google',
     displayName: 'Google',
-    logo: '/hearsay/logos/google.svg',
+    logo: logoUrl('google.svg'),
     endpoint: 'google',
     brandColor: '#4285F4',
     defaultEnabled: true,
@@ -13,7 +18,7 @@ export const PLATFORMS = [
   {
     id: 'yelp',
     displayName: 'Yelp',
-    logo: '/hearsay/logos/yelp.svg',
+    logo: logoUrl('yelp.svg'),
     endpoint: 'yelp',
     brandColor: '#FF1A1A',
     defaultEnabled: true,
@@ -23,7 +28,7 @@ export const PLATFORMS = [
   {
     id: 'reddit',
     displayName: 'Reddit',
-    logo: '/hearsay/logos/reddit.svg',
+    logo: logoUrl('reddit.svg'),
     endpoint: 'reddit',
     brandColor: '#FF4500',
     defaultEnabled: true,
@@ -34,7 +39,7 @@ export const PLATFORMS = [
   {
     id: 'youtube',
     displayName: 'YouTube',
-    logo: '/hearsay/logos/youtube.svg',
+    logo: logoUrl('youtube.svg'),
     endpoint: 'youtube',
     brandColor: '#FF0000',
     defaultEnabled: true,
@@ -44,7 +49,7 @@ export const PLATFORMS = [
   {
     id: 'tripadvisor',
     displayName: 'TripAdvisor',
-    logo: '/hearsay/logos/tripadvisor.svg',
+    logo: logoUrl('tripadvisor.svg'),
     endpoint: 'tripadvisor',
     brandColor: '#34E0A1',
     defaultEnabled: true,
@@ -54,7 +59,7 @@ export const PLATFORMS = [
   {
     id: 'facebook',
     displayName: 'Facebook',
-    logo: '/hearsay/logos/facebook.svg',
+    logo: logoUrl('facebook.svg'),
     endpoint: 'facebook',
     brandColor: '#1877F2',
     defaultEnabled: true,
@@ -65,7 +70,7 @@ export const PLATFORMS = [
   {
     id: 'trustpilot',
     displayName: 'Trustpilot',
-    logo: '/hearsay/logos/trustpilot.svg',
+    logo: logoUrl('trustpilot.svg'),
     endpoint: 'trustpilot',
     brandColor: '#00B67A',
     defaultEnabled: true,
@@ -73,11 +78,128 @@ export const PLATFORMS = [
     integrated: true,
   },
 
+  // ── Vendor / retailer platforms ───────────────────────────────────────────
+  // All share one Worker route ('vendor') that runs a SerpAPI `site:<domain>`
+  // search. Queried only for the product / electronics categories (gated in
+  // useAllPlatforms + the vendor route), so they never burn SerpAPI budget on
+  // restaurant/place/business searches. `vendor: true` keeps them out of the
+  // core-platform count in tests and the default/region Pull-from rows.
+  {
+    id: 'amazon',
+    displayName: 'Amazon',
+    logo: logoUrl('amazon.svg'),
+    endpoint: 'vendor',
+    site: 'amazon.com',
+    brandColor: '#FF9900',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'walmart',
+    displayName: 'Walmart',
+    logo: logoUrl('walmart.svg'),
+    endpoint: 'vendor',
+    site: 'walmart.com',
+    brandColor: '#0071DC',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'target',
+    displayName: 'Target',
+    logo: logoUrl('target.svg'),
+    endpoint: 'vendor',
+    site: 'target.com',
+    brandColor: '#CC0000',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'ebay',
+    displayName: 'eBay',
+    logo: logoUrl('ebay.svg'),
+    endpoint: 'vendor',
+    site: 'ebay.com',
+    brandColor: '#E53238',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'etsy',
+    displayName: 'Etsy',
+    logo: logoUrl('etsy.svg'),
+    endpoint: 'vendor',
+    site: 'etsy.com',
+    brandColor: '#F56400',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'aliexpress',
+    displayName: 'AliExpress',
+    logo: logoUrl('aliexpress.svg'),
+    endpoint: 'vendor',
+    site: 'aliexpress.com',
+    brandColor: '#FF4747',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'bestbuy',
+    displayName: 'Best Buy',
+    logo: logoUrl('bestbuy.svg'),
+    endpoint: 'vendor',
+    site: 'bestbuy.com',
+    brandColor: '#0046BE',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'newegg',
+    displayName: 'Newegg',
+    logo: logoUrl('newegg.svg'),
+    endpoint: 'vendor',
+    site: 'newegg.com',
+    brandColor: '#E66A17',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'apple',
+    displayName: 'Apple',
+    logo: logoUrl('apple.svg'),
+    endpoint: 'vendor',
+    site: 'apple.com',
+    brandColor: '#555555',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+  {
+    id: 'samsung',
+    displayName: 'Samsung',
+    logo: logoUrl('samsung.svg'),
+    endpoint: 'vendor',
+    site: 'samsung.com',
+    brandColor: '#1428A0',
+    defaultEnabled: true,
+    integrated: true,
+    vendor: true,
+  },
+
   // ── Coming-soon platforms ─────────────────────────────────────────────────
   {
     id: 'opentable',
     displayName: 'OpenTable',
-    logo: '/hearsay/logos/opentable.svg',
+    logo: logoUrl('opentable.svg'),
     brandColor: '#DA3743',
     defaultEnabled: false,
     integrated: false,
@@ -85,7 +207,7 @@ export const PLATFORMS = [
   {
     id: 'nextdoor',
     displayName: 'Nextdoor',
-    logo: '/hearsay/logos/nextdoor.svg',
+    logo: logoUrl('nextdoor.svg'),
     brandColor: '#8ED500',
     defaultEnabled: false,
     integrated: false,
@@ -93,7 +215,7 @@ export const PLATFORMS = [
   {
     id: 'foursquare',
     displayName: 'Foursquare',
-    logo: '/hearsay/logos/foursquare.svg',
+    logo: logoUrl('foursquare.svg'),
     brandColor: '#F94877',
     defaultEnabled: false,
     integrated: false,
@@ -101,7 +223,7 @@ export const PLATFORMS = [
   {
     id: 'thefork',
     displayName: 'TheFork',
-    logo: '/hearsay/logos/thefork.svg',
+    logo: logoUrl('thefork.svg'),
     brandColor: '#00B163',
     defaultEnabled: false,
     integrated: false,
@@ -109,7 +231,7 @@ export const PLATFORMS = [
   {
     id: 'michelin',
     displayName: 'Michelin',
-    logo: '/hearsay/logos/michelin.svg',
+    logo: logoUrl('michelin.svg'),
     brandColor: '#E4251B',
     defaultEnabled: false,
     integrated: false,
@@ -117,7 +239,7 @@ export const PLATFORMS = [
   {
     id: 'justdial',
     displayName: 'JustDial',
-    logo: '/hearsay/logos/justdial.svg',
+    logo: logoUrl('justdial.svg'),
     brandColor: '#E91E2C',
     defaultEnabled: false,
     integrated: false,
@@ -125,7 +247,7 @@ export const PLATFORMS = [
   {
     id: 'magicpin',
     displayName: 'Magicpin',
-    logo: '/hearsay/logos/magicpin.svg',
+    logo: logoUrl('magicpin.svg'),
     brandColor: '#E01B24',
     defaultEnabled: false,
     integrated: false,
@@ -133,7 +255,7 @@ export const PLATFORMS = [
   {
     id: 'zomato',
     displayName: 'Zomato',
-    logo: '/hearsay/logos/zomato.svg',
+    logo: logoUrl('zomato.svg'),
     brandColor: '#E23744',
     defaultEnabled: false,
     integrated: false,
@@ -141,7 +263,7 @@ export const PLATFORMS = [
   {
     id: 'swiggy',
     displayName: 'Swiggy',
-    logo: '/hearsay/logos/swiggy.svg',
+    logo: logoUrl('swiggy.svg'),
     brandColor: '#FC8019',
     defaultEnabled: false,
     integrated: false,
@@ -149,7 +271,7 @@ export const PLATFORMS = [
   {
     id: 'dianping',
     displayName: 'Dianping',
-    logo: '/hearsay/logos/dianping.svg',
+    logo: logoUrl('dianping.svg'),
     brandColor: '#FF6633',
     defaultEnabled: false,
     integrated: false,
@@ -157,7 +279,7 @@ export const PLATFORMS = [
   {
     id: 'meituan',
     displayName: 'Meituan',
-    logo: '/hearsay/logos/meituan.svg',
+    logo: logoUrl('meituan.svg'),
     brandColor: '#FFD100',
     defaultEnabled: false,
     integrated: false,
@@ -165,7 +287,7 @@ export const PLATFORMS = [
   {
     id: 'baidumaps',
     displayName: 'Baidu Maps',
-    logo: '/hearsay/logos/baidumaps.svg',
+    logo: logoUrl('baidumaps.svg'),
     brandColor: '#2932E1',
     defaultEnabled: false,
     integrated: false,
@@ -173,7 +295,7 @@ export const PLATFORMS = [
   {
     id: 'gaode',
     displayName: 'Gaode',
-    logo: '/hearsay/logos/gaode.svg',
+    logo: logoUrl('gaode.svg'),
     brandColor: '#1677FF',
     defaultEnabled: false,
     integrated: false,
@@ -181,7 +303,7 @@ export const PLATFORMS = [
   {
     id: 'xiaohongshu',
     displayName: 'Xiaohongshu',
-    logo: '/hearsay/logos/xiaohongshu.svg',
+    logo: logoUrl('xiaohongshu.svg'),
     brandColor: '#FF2442',
     defaultEnabled: false,
     integrated: false,
@@ -189,7 +311,7 @@ export const PLATFORMS = [
   {
     id: 'wechat',
     displayName: 'WeChat',
-    logo: '/hearsay/logos/wechat.svg',
+    logo: logoUrl('wechat.svg'),
     brandColor: '#07C160',
     defaultEnabled: false,
     integrated: false,
@@ -197,7 +319,7 @@ export const PLATFORMS = [
   {
     id: 'grabfood',
     displayName: 'GrabFood',
-    logo: '/hearsay/logos/grabfood.svg',
+    logo: logoUrl('grabfood.svg'),
     brandColor: '#00B14F',
     defaultEnabled: false,
     integrated: false,
@@ -205,7 +327,7 @@ export const PLATFORMS = [
   {
     id: 'agoda',
     displayName: 'Agoda',
-    logo: '/hearsay/logos/agoda.svg',
+    logo: logoUrl('agoda.svg'),
     brandColor: '#5392FF',
     defaultEnabled: false,
     integrated: false,
@@ -213,7 +335,7 @@ export const PLATFORMS = [
   {
     id: 'wongnai',
     displayName: 'Wongnai',
-    logo: '/hearsay/logos/wongnai.svg',
+    logo: logoUrl('wongnai.svg'),
     brandColor: '#FF1940',
     defaultEnabled: false,
     integrated: false,
@@ -221,7 +343,7 @@ export const PLATFORMS = [
   {
     id: 'chope',
     displayName: 'Chope',
-    logo: '/hearsay/logos/chope.svg',
+    logo: logoUrl('chope.svg'),
     brandColor: '#E8472C',
     defaultEnabled: false,
     integrated: false,
@@ -229,7 +351,7 @@ export const PLATFORMS = [
   {
     id: 'rappi',
     displayName: 'Rappi',
-    logo: '/hearsay/logos/rappi.svg',
+    logo: logoUrl('rappi.svg'),
     brandColor: '#FF441F',
     defaultEnabled: false,
     integrated: false,
@@ -237,7 +359,7 @@ export const PLATFORMS = [
   {
     id: 'degusta',
     displayName: 'Degusta',
-    logo: '/hearsay/logos/degusta.svg',
+    logo: logoUrl('degusta.svg'),
     brandColor: '#E31219',
     defaultEnabled: false,
     integrated: false,
@@ -245,7 +367,7 @@ export const PLATFORMS = [
   {
     id: 'talabat',
     displayName: 'Talabat',
-    logo: '/hearsay/logos/talabat.svg',
+    logo: logoUrl('talabat.svg'),
     brandColor: '#FF6A00',
     defaultEnabled: false,
     integrated: false,

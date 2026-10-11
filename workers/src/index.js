@@ -9,6 +9,7 @@ import { youtubeHandler } from './routes/youtube.js'
 import { tripadvisorHandler } from './routes/tripadvisor.js'
 import { facebookHandler } from './routes/facebook.js'
 import { trustpilotHandler } from './routes/trustpilot.js'
+import { vendorHandler } from './routes/vendor.js'
 
 const router = Router()
 
@@ -23,6 +24,7 @@ router.get('/youtube', youtubeHandler)
 router.get('/tripadvisor', tripadvisorHandler)
 router.get('/facebook', facebookHandler)
 router.get('/trustpilot', trustpilotHandler)
+router.get('/vendor', vendorHandler)
 
 // Google photo proxy — keeps API key server-side, resolves Places photo redirect
 router.get('/google-photo', async (request, env) => {

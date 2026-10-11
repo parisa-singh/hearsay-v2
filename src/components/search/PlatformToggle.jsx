@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import { useUIStore } from '../../store/uiStore'
 import { PLATFORM_MAP, PLATFORMS } from '../../constants/platforms'
-import { getPlatformTiers } from '../../utils/platformRegions'
+import { getPlatformTiers, getCategoryPlatforms } from '../../utils/platformRegions'
+
+const CATEGORY_LABELS = {
+  restaurant: 'restaurants',
+  product: 'products',
+  electronics: 'electronics',
+  place: 'places & hotels',
+  business: 'businesses',
+}
 
 function IntegratedChip({ p, enabled, onToggle, animIndex, disabled }) {
   if (disabled) {
@@ -60,10 +68,11 @@ function ComingSoonChip({ p, animIndex }) {
 }
 
 export default function PlatformToggle() {
-  const { isPlatformEnabled, togglePlatform, location } = useUIStore()
+  const { isPlatformEnabled, togglePlatform, location, searchCategory } = useUIStore()
 
   const countryCode = location?.countryCode ?? null
   const city = location?.city ?? null
+  const categoryIds = searchCategory ? getCategoryPlatforms(searchCategory) : null
 
   const [showBanner, setShowBanner] = useState(false)
   const [isFading, setIsFading] = useState(false)
@@ -79,6 +88,46 @@ export default function PlatformToggle() {
       return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
     }
   }, [countryCode])
+
+  // Category selected: the Pull-from row follows what the user is searching
+  // for. Takes precedence over location — a product search shows retailers, not
+  // whatever's popular in the current city.
+  if (categoryIds) {
+    const catPlatforms = categoryIds.map(id => PLATFORM_MAP[id]).filter(Boolean)
+    const catIntegrated = catPlatforms.filter(p => p.integrated)
+      .sort((a, b) => (a.working === false ? 1 : 0) - (b.working === false ? 1 : 0))
+    const catComingSoon = catPlatforms.filter(p => !p.integrated)
+    const label = CATEGORY_LABELS[searchCategory] ?? searchCategory
+
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-zinc-500 text-center mb-2">
+          Best sources for <span className="text-accent">{label}</span>
+        </p>
+
+        <div key={searchCategory} className="flex flex-wrap gap-1.5 justify-center">
+          {catIntegrated.map((p, i) => (
+            <IntegratedChip
+              key={p.id}
+              p={p}
+              enabled={isPlatformEnabled(p.id)}
+              onToggle={togglePlatform}
+              animIndex={i}
+              disabled={p.working === false}
+            />
+          ))}
+        </div>
+
+        {catComingSoon.length > 0 && (
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            {catComingSoon.map((p, i) => (
+              <ComingSoonChip key={p.id} p={p} animIndex={catIntegrated.length + i} />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   // No location: working platforms, then a greyed "coming soon" line (3 + more)
   if (!countryCode) {

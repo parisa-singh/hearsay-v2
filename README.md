@@ -8,25 +8,26 @@
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-222?logo=github&logoColor=white)](https://parisa-singh.github.io/hearsay)
 
-**Hearsay** is a cross-platform review aggregator that queries 7 major platforms in parallel and shows their reviews side-by-side — giving you the full, unfiltered picture instead of a skewed view from a single source.
+**Hearsay** is a cross-platform review aggregator that queries the platforms relevant to your search — 7 major review sites, plus major retailers for products/electronics — in parallel and shows their reviews side-by-side, giving you the full, unfiltered picture instead of a skewed view from a single source.
 
 The name is intentional: *hearsay* means word of mouth, what people are saying — which is exactly what reviews are.
 
 **No AI synthesis.** Hearsay never rewrites, summarizes, or "decides" for you. Disagreement between platforms is detected **algorithmically** (a 1.5+ star gap), so the divergence you see is a fact about the data, not an opinion from a model.
 
-**[Live Demo →](https://parisa-singh.github.io/hearsay)**
+**[Live Demo →](https://parisa-singh.github.io/hearsay-v2)**
 
 ---
 
 ## What It Does
 
-1. You search for anything — a restaurant, product, place, or business — and pick a category
-2. Hearsay queries **Google, Yelp, Reddit, YouTube, TripAdvisor, Facebook, and Trustpilot** simultaneously (`useQueries` — one platform failing never blocks the rest)
-3. Results are split into **Global Reviews** and **Near You** (location-aware, via geolocation or manual city entry)
-4. Reviews are shown **side-by-side per platform** — no single algorithm's verdict
-5. A **Divergence Alert** fires when two platforms disagree by 1.5+ stars — computed in `src/utils/divergence.js`, no AI
-6. A **comparison chart** (radar + bars) visualizes how ratings spread across platforms
-7. **Regional coming-soon chips** show what's available vs. in-progress per country
+1. You search for anything — a restaurant, product, electronics, place, or business — and pick a category
+2. Hearsay queries the platforms relevant to that category in parallel (`useQueries` — one platform failing never blocks the rest): review sites (**Google, Yelp, Reddit, YouTube, TripAdvisor, Facebook, Trustpilot**) for restaurants/places/businesses, and **retailers (Amazon, Walmart, Target, eBay, Etsy, AliExpress, Best Buy, Newegg, Apple, Samsung)** for products/electronics
+3. The **Pull-from** row adapts to the category you pick (what you're searching), the same way it adapts to your location (where you are)
+4. Results are split into **Global Reviews** and **Near You** (location-aware, via geolocation or manual city entry)
+5. Reviews are shown **side-by-side per platform** — no single algorithm's verdict
+6. A **Divergence Alert** fires when two platforms disagree by 1.5+ stars — computed in `src/utils/divergence.js`, no AI
+7. A **comparison chart** (radar + bars) visualizes how ratings spread across platforms
+8. **Regional coming-soon chips** show what's available vs. in-progress per country
 
 ---
 
@@ -43,7 +44,7 @@ The name is intentional: *hearsay* means word of mouth, what people are saying �
 | Routing | React Router v7 |
 | Serverless API | Cloudflare Workers (itty-router) |
 | Analytics | Google Analytics 4 (env-gated) |
-| Testing | Vitest + jsdom + Testing Library (34 tests) |
+| Testing | Vitest + jsdom + Testing Library (43 tests) |
 | Deployment | GitHub Actions → GitHub Pages |
 
 ---
@@ -55,7 +56,7 @@ GitHub Pages (static Vite build)
         ↕ HTTPS fetch
 Cloudflare Workers (API proxy layer — per-IP rate limited, response caching)
         ↕
-Google Places · Yelp · Reddit · YouTube · SerpAPI (TripAdvisor / Facebook / Trustpilot)
+Google Places · Yelp · Reddit · YouTube · SerpAPI (TripAdvisor / Facebook / Trustpilot / vendor retailers)
 ```
 
 - All API secrets live in Cloudflare Workers environment — never in client-side code.
@@ -68,8 +69,8 @@ Google Places · Yelp · Reddit · YouTube · SerpAPI (TripAdvisor / Facebook / 
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/parisa-singh/hearsay.git
-cd hearsay
+git clone https://github.com/parisa-singh/hearsay-v2.git
+cd hearsay-v2
 
 # 2. Install frontend dependencies
 npm install
@@ -78,7 +79,7 @@ npm install
 cp .env.example .env.local
 # Fill in VITE_API_BASE_URL (your Worker URL); VITE_GA_MEASUREMENT_ID is optional
 
-# 4. Start dev server (http://localhost:5173/hearsay/)
+# 4. Start dev server (http://localhost:5173/hearsay-v2/)
 npm run dev
 
 # 5. (Separate terminal) Start Workers locally
@@ -100,7 +101,7 @@ npm test
 | `REDDIT_CLIENT_ID` | Wrangler secret | Reddit app client ID |
 | `REDDIT_CLIENT_SECRET` | Wrangler secret | Reddit app client secret |
 | `YOUTUBE_API_KEY` | Wrangler secret | Same key as `GOOGLE_API_KEY` |
-| `SERPAPI_KEY` | Wrangler secret | SerpAPI key (TripAdvisor + Facebook + Trustpilot) |
+| `SERPAPI_KEY` | Wrangler secret | SerpAPI key (TripAdvisor + Facebook + Trustpilot + vendor retailers) |
 
 The per-IP rate limiter is configured (not a secret) via the `RATE_LIMITER` binding in `workers/wrangler.toml`.
 

@@ -3,10 +3,21 @@ import { PLATFORMS, PLATFORM_MAP } from '../constants/platforms'
 
 const integrated = PLATFORMS.filter(p => p.integrated)
 const comingSoon = PLATFORMS.filter(p => !p.integrated)
+const coreIntegrated = integrated.filter(p => !p.vendor)
+const vendors = PLATFORMS.filter(p => p.vendor)
 
 describe('PLATFORMS constant', () => {
-  it('has 7 integrated platforms', () => {
-    expect(integrated).toHaveLength(7)
+  it('has 7 core (non-vendor) integrated platforms', () => {
+    expect(coreIntegrated).toHaveLength(7)
+  })
+
+  it('all vendor platforms are integrated and share the vendor endpoint with a site', () => {
+    expect(vendors.length).toBeGreaterThan(0)
+    vendors.forEach(p => {
+      expect(p.integrated, `${p.id} should be integrated`).toBe(true)
+      expect(p.endpoint, `${p.id} should use the vendor endpoint`).toBe('vendor')
+      expect(p.site, `${p.id} should have a site`).toBeTruthy()
+    })
   })
 
   it('all integrated platforms have defaultEnabled: true', () => {

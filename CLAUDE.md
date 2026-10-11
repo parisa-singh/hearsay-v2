@@ -14,7 +14,7 @@ This repo (`hearsay-v2`) is a **fork of v1**, created 2026-10-06 to freeze the s
 - **Reddit is marked `working: false`** in `platforms.js` (creds pending/not approved). Effect: greyed "Down" chip, sorted to the END of the Pull-from row, and **not queried** (`useAllPlatforms` skips `working === false`). Still `integrated: true` so tests pass. To re-enable: remove the `working: false` line once creds are set. **Yelp** also effectively down (trial expired) but still queried (card hidden on error).
 - ⭐ **NEXT STEP — GA4 analytics for v2.** Plumbing is ready (`src/utils/analytics.js`, `initGA` in `main.jsx`, page_view in `Layout.jsx`, `search` event in `SearchBar.jsx`), gated on `VITE_GA_MEASUREMENT_ID` (currently unset = no-op). To turn on visitor tracking: create a **dedicated v2 GA4 web stream**, then set `VITE_GA_MEASUREMENT_ID` as a **repo secret** (`gh secret set`) AND in `.env.local`, and redeploy. (Reusing v1's `G-M63F6NVM6J` works but mixes v1+v2 traffic.) GA4 then shows Users / sessions / avg engagement time + the custom `search` event.
 - Base path is `/hearsay-v2/` (vite `base`, router `basename`, 404 redirect).
-- **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — **42/42 pass**.
+- **Test runner quirk**: the default `npm test` (vitest threads pool) can hit a worker-pool timeout on cold start in this OneDrive folder. Use `npx vitest run --pool=forks` — **43/43 pass**.
 - Deploy pipeline is live: push to `main` → Actions → Pages. The `gh` token now has `workflow` scope (added 2026-10-06), so workflow files push from the CLI without the web-editor workaround.
 
 ---
@@ -29,6 +29,25 @@ v2 diverges from v1 visually and in the results UX. Key pieces:
 - **Homepage**: Fraunces hero, glassy search card (teal pills + teal glowing Search button), single-row wrapping Pull-from chips, compact greyed "Coming soon" row (3 + hover "+N more"). **About page** fully restyled in the new language.
 - **ComparisonChart**: bars (capped, interactive hover tooltips) beside a larger single-series radar (shown only at ≥3 rated); exports `ComparisonBlock` (handles the low-coverage note).
 - **SerpAPI structured ratings**: `workers/src/utils/serpapiRating.js` reads SerpAPI rich-snippet `rating`/`reviews` (used by tripadvisor + trustpilot) so TripAdvisor/Trustpilot contribute real ratings beyond Google.
+
+---
+
+## ⚠️ Vendors & category-specific Pull-from (Oct 2026)
+
+Added so searches surface platforms relevant to **what** you're looking for, not just **where** you are.
+
+- **New category: `electronics`** (5th pill in `SearchBar.jsx`: restaurant / product / electronics / place / business).
+- **Category drives the Pull-from row.** `getCategoryPlatforms(category)` in `platformRegions.js` mirrors the existing location-based `getPlatformTiers(countryCode)`. When a category is selected it takes precedence (shows that category's platforms); with no category it falls back to the location/default tiers. Category is shared via `searchCategory` in `uiStore` (transient, not persisted) so `SearchBar` and `PlatformToggle` stay in sync.
+  - restaurant → google, yelp, tripadvisor, facebook, youtube, reddit
+  - place → google, tripadvisor, yelp, facebook, trustpilot, youtube
+  - business → google, trustpilot, yelp, facebook, youtube, reddit
+  - product → **amazon, walmart, target, ebay, etsy, aliexpress**, trustpilot, youtube, reddit
+  - electronics → **bestbuy, newegg, amazon, apple, samsung**, trustpilot, youtube, reddit
+- **Vendor/retailer platforms** (in `platforms.js`, flagged `vendor: true`): Amazon, Walmart, Target, eBay, Etsy, AliExpress, Best Buy, Newegg, Apple, Samsung. All `integrated: true` but share **one** Worker route (`endpoint: 'vendor'` + a `site` field) — avoids 10 separate routes/quota multipliers.
+- **Query gating:** `useAllPlatforms.js` intersects enabled platforms with `getCategoryPlatforms(category)`, so vendors only fire for product/electronics and review sites stay out of product results. It also forwards `platform.site` to the route.
+- **Worker `vendor` route** (`workers/src/routes/vendor.js`): SerpAPI Google engine `q: "<query> review site:<domain>"`, domain allow-list, category-gated (product/electronics only), 24hr cache (`vendor:v1:`). Registered in `index.js`.
+- ⚠️ **Vendor reviews are currently Google snippets, not real scraped reviews.** A proper scrape path is a **pending decision** — raw HTML scraping of Amazon/Walmart/Target/BestBuy from a Worker is blocked by anti-bot (same reason TripAdvisor/Trustpilot moved to SerpAPI). Realistic options: SerpAPI dedicated product-review engines (Walmart/eBay/Google Shopping), a third-party scraping API (ScraperAPI/Bright Data/Apify), or official per-vendor APIs. Needs `wrangler deploy` for the `/vendor` route to go live.
+- **Logo path fix:** logos now resolve via `import.meta.env.BASE_URL` (`logoUrl()` helper in `platforms.js`) instead of hardcoded `/hearsay/logos/`. The old paths 404'd locally and only worked in prod by falling through to v1's deployment; v2 is now self-contained.
 
 ---
 
@@ -66,7 +85,7 @@ v2 diverges from v1 visually and in the results UX. Key pieces:
 | Routing | React Router v7 | createBrowserRouter, basename: '/hearsay-v2' |
 | Serverless API | Cloudflare Workers | itty-router v4 |
 | Deployment | GitHub Actions → GitHub Pages | `npm install` + `vite build` + deploy-pages |
-| Testing | Vitest + jsdom + Testing Library | `npm test` runs 34 tests |
+| Testing | Vitest + jsdom + Testing Library | `npm test` runs 43 tests |
 | Analytics | Google Analytics 4 (gtag.js) | Env-gated via `VITE_GA_MEASUREMENT_ID`; page views + `search` event. No ID = no-op |
 
 ---
@@ -85,6 +104,7 @@ GET  /youtube       → YouTube Data API v3 (Search + Videos + CommentThreads)
 GET  /tripadvisor   → SerpAPI (Google engine, site:tripadvisor.com, 24hr cache)
 GET  /facebook      → SerpAPI (Google engine, site:facebook.com, labeled "Facebook Mentions", 24hr cache)
 GET  /trustpilot    → SerpAPI (Google engine, site:trustpilot.com, 24hr cache, category-gated)
+GET  /vendor        → SerpAPI (Google engine, site:<retailer>, 24hr cache) — ONE shared route for all vendor/retailer platforms (Amazon, Walmart, …); takes a `site` param; gated to product/electronics
 ```
 
 **Critical architectural details**:
@@ -96,7 +116,7 @@ GET  /trustpilot    → SerpAPI (Google engine, site:trustpilot.com, 24hr cache,
 - `VITE_API_BASE_URL` must be set as a GitHub Actions repo secret for production builds
 - `useAllPlatforms.js` filters to `p.integrated === true` — coming-soon platforms are never queried
 - **Category-aware querying**: every search carries a `category` (`restaurant` | `product` | `place` | `business`, chosen via pills in `SearchBar.jsx`). Each route shapes/gates by category — see the "Category Handling" table below. The `category` is part of each route's cache key (or baked into the search string) so cross-category requests don't serve each other's results.
-- **3 routes share SerpAPI**: TripAdvisor + Facebook + Trustpilot all call SerpAPI's Google engine against one 100-search/month budget. A single non-restaurant search can fire up to 3 SerpAPI calls (minus 24hr cache hits)
+- **SerpAPI is shared across routes**: TripAdvisor + Facebook + Trustpilot **+ the vendor route** all call SerpAPI's Google engine against one 100-search/month budget. The vendor route fires once **per selected vendor** — a product/electronics search can hit ~6 vendor calls on top of Trustpilot, so this category burns the budget much faster (minus 24hr cache hits). Watch usage.
 - **Per-IP rate limiting**: `workers/src/index.js` calls `checkRateLimit()` before routing (except OPTIONS). Uses Cloudflare's native `RATE_LIMITER` binding (`[[unsafe.bindings]]` in `wrangler.toml`), keyed on `CF-Connecting-IP`, 60 req/60s per IP. CORS only restrains browsers — this stops non-browser (curl) abuse of the shared quotas. **Fail-open**: missing binding/IP or a limiter error allows the request. Over-limit → `429` + `Retry-After`. Activates only on `wrangler deploy` (Workers don't deploy via CI).
 - **Analytics (GA4)**: `src/utils/analytics.js` wraps gtag; init in `main.jsx`, manual `page_view` per route change in `Layout.jsx` (SPA-aware, `send_page_view:false`), custom `search` event in `SearchBar.jsx`. Reads `VITE_GA_MEASUREMENT_ID` (measurement ID `G-M63F6NVM6J`) — unset = fully disabled, no gtag script.
 
@@ -116,7 +136,7 @@ Both must also be set as GitHub Actions repo secrets so production builds pick t
 GOOGLE_API_KEY        — Google Cloud key (Places API + YouTube Data API v3 both enabled on same key)
 YELP_API_KEY          — Yelp Fusion API key
 YOUTUBE_API_KEY       — Same key as GOOGLE_API_KEY
-SERPAPI_KEY           — SerpAPI key (TripAdvisor + Facebook + Trustpilot routes)
+SERPAPI_KEY           — SerpAPI key (TripAdvisor + Facebook + Trustpilot + vendor routes)
 REDDIT_CLIENT_ID      — Reddit app client ID (status unverified — run `wrangler secret list`)
 REDDIT_CLIENT_SECRET  — Reddit app client secret (status unverified)
 ```
@@ -135,12 +155,13 @@ The rate-limiter is **not** a secret — it's the `RATE_LIMITER` `[[unsafe.bindi
 | Facebook | ✅ Working | SerpAPI fallback; labeled "Facebook Mentions"; 24hr cache |
 | Reddit | ⚙️ Default-on, creds unverified | `integrated: true` + `defaultEnabled: true` in `platforms.js`, so it's queried on every search. Route uses OAuth client credentials. If secrets aren't set it fails silently (card hidden). Verify with `wrangler secret list`. |
 | Trustpilot | ✅ Working | SerpAPI (Google engine, `site:trustpilot.com reviews`); parses TrustScore/stars from snippets; 24hr cache (key `trustpilot:v3:`). Category-gated: `restaurant` returns empty. No longer HTML/JSON-LD scraping. |
+| Vendors (Amazon, Walmart, Target, eBay, Etsy, AliExpress, Best Buy, Newegg, Apple, Samsung) | ⚙️ Snippets only | Shared `/vendor` route via SerpAPI `site:<domain>`. Returns Google rich-snippet ratings/text, **not real scraped reviews yet** (scrape method pending — see Vendors section). Queried only for product/electronics. Needs `wrangler deploy` to go live. |
 
 ---
 
 ## Category Handling (per route)
 
-Categories: `restaurant`, `product`, `place`, `business`. Each route gates and/or shapes the query. "Empty" = returns `{ reviews: [], rating: null }` without calling the upstream API.
+Categories: `restaurant`, `product`, `electronics`, `place`, `business`. Each route gates and/or shapes the query. "Empty" = returns `{ reviews: [], rating: null }` without calling the upstream API. `electronics` behaves like `product` for the review routes (YouTube/Trustpilot/Reddit); the vendor route treats it as `product` for relevance filtering. **Which platforms are queried at all is also gated client-side by `getCategoryPlatforms(category)`** (see the Vendors section) — e.g. vendors never run for restaurant/place/business.
 
 | Platform | restaurant | product | place | business |
 |---|---|---|---|---|
@@ -202,10 +223,10 @@ Categories: `restaurant`, `product`, `place`, `business`. Each route gates and/o
 - **Divergence**: Algorithmic — `calculateDivergence()` flags 1.5+ star gap. Returns `{ detected, platform_a, platform_b, explanation }`.
 - **Location reset**: Clicking Reset triggers a full-screen `animate-wipe-right` overlay (zinc-950, sweeps left→right) that calls `clearLocation()` on animation end.
 - **Search history sidebar**: Right-side drawer, `w-80`, slides in from right. Stores last 20 searches (as `{q, category}`). "View all →" button on homepage opens it. "Clear all" wipes history.
-- **Search categories**: Required before search — 2×2 pill grid in `SearchBar.jsx` (`restaurant`/`product`/`place`/`business`). Drives per-route category gating (see Category Handling table).
+- **Search categories**: Required before search — pill grid in `SearchBar.jsx` (`restaurant`/`product`/`electronics`/`place`/`business`). Selection lives in `uiStore.searchCategory` (shared with the Pull-from row). Drives both per-route category gating (see Category Handling table) and which platforms are shown/queried via `getCategoryPlatforms()`.
 - **Media card**: YouTube video thumbnails + Google photos rendered above the review grid on results.
 - **Results controls**: Share button, keyword highlighting in review text, and sort/filter on results. Cache timestamps shown with a manual refresh that re-fetches with `nocache=1` (bumps `refreshCount`, busts the Worker cache).
-- **SerpAPI budget**: 100 searches/month shared between **TripAdvisor + Facebook + Trustpilot** (3 routes). All default-on — watch usage at serpapi.com/dashboard. 24hr caching helps significantly; a single non-restaurant search can fire up to 3 SerpAPI calls.
+- **SerpAPI budget**: 100 searches/month shared between **TripAdvisor + Facebook + Trustpilot + the vendor route**. All default-on — watch usage at serpapi.com/dashboard. 24hr caching helps significantly. A non-restaurant search can fire several SerpAPI calls; a product/electronics search fires one **per selected vendor** (~6) plus Trustpilot, so it's the heaviest category.
 - **YouTube API quota**: ~71 full queries/day. 2hr caching.
 
 ---
@@ -223,7 +244,7 @@ npm run test:watch  # watch mode
 - `platformGrid.test.js` — visibility filter (hides errors/empty, keeps loading+data), sort order
 - `divergence.test.js` — gap detection threshold, null rating handling, explanation string format
 
-34 tests, all passing. Run before pushing any changes to core utility functions.
+43 tests, all passing. Run before pushing any changes to core utility functions.
 
 ---
 
@@ -310,21 +331,21 @@ hearsay/
 │   │       ├── ReviewTabs.jsx          ← Global / Near You tab switcher
 │   │       └── LocalEmptyState.jsx     ← Shown when Near You tab has no data
 │   ├── hooks/
-│   │   ├── useAllPlatforms.js      ← Parallel fetch for all integrated+enabled platforms
+│   │   ├── useAllPlatforms.js      ← Parallel fetch for integrated+enabled platforms, intersected with getCategoryPlatforms(category); forwards platform.site
 │   │   └── useLocation.js          ← Geolocation API + Nominatim reverse geocoding
 │   ├── utils/
 │   │   ├── api.js                  ← fetchPlatform() with 10s timeout
 │   │   ├── divergence.js           ← calculateDivergence() — 1.5+ star gap detection
-│   │   ├── platformRegions.js      ← getPlatformTiers(countryCode) — 7 platforms per region
+│   │   ├── platformRegions.js      ← getPlatformTiers(countryCode) — 7 per region; getCategoryPlatforms(category) — per-category platform list
 │   │   ├── formatters.js           ← Rating display, relative date, text truncation
 │   │   ├── sentimentColor.js       ← Rating number → Tailwind color classes
 │   │   └── analytics.js            ← GA4 gtag wrapper: initGA/trackPageView/trackEvent (env-gated no-op)
 │   ├── constants/
-│   │   ├── platforms.js            ← PLATFORMS array — single source of truth for all platforms
-│   │   │                             integrated: true = queried; integrated: false = coming-soon only
+│   │   ├── platforms.js            ← PLATFORMS array — single source of truth for all platforms (logoUrl() uses BASE_URL)
+│   │   │                             integrated: true = queried; integrated: false = coming-soon only; vendor: true = retailer on shared /vendor route
 │   │   └── queryKeys.js            ← TanStack Query key factories
 │   ├── store/
-│   │   └── uiStore.js              ← Zustand: selectedPlatforms, searchHistory (20), historyOpen, location
+│   │   └── uiStore.js              ← Zustand: selectedPlatforms, searchCategory, searchHistory (20), historyOpen, location
 │   └── test/
 │       ├── setup.js                ← @testing-library/jest-dom setup
 │       ├── platforms.test.js
@@ -342,7 +363,8 @@ hearsay/
         │   ├── youtube.js          ← Search → video details → commentThreads (2hr cache; buildSearchQuery)
         │   ├── tripadvisor.js      ← SerpAPI Google engine, site:tripadvisor.com (24hr; empty for product/business)
         │   ├── facebook.js         ← SerpAPI Google engine, site:facebook.com (24hr; buildSearchQuery)
-        │   └── trustpilot.js       ← SerpAPI Google engine, site:trustpilot.com (24hr; empty for restaurant)
+        │   ├── trustpilot.js       ← SerpAPI Google engine, site:trustpilot.com (24hr; empty for restaurant)
+        │   └── vendor.js           ← SerpAPI Google engine, site:<retailer> — shared by all vendor platforms; product/electronics only
         └── utils/
             ├── cors.js             ← corsHeaders, handleOptions(), addCorsHeaders()
             ├── cache.js            ← Cloudflare Cache API wrapper with TTL
@@ -358,7 +380,7 @@ hearsay/
 - **Reddit**: Now `integrated: true` + `defaultEnabled: true`, so it's queried on every search. Credential status unverified — if `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` aren't set (check `wrangler secret list`), the call fails silently every search (card hidden). Set them or flip the platform back to coming-soon to stop the wasted request.
 - **Trustpilot**: Migrated to SerpAPI (Google engine, `site:trustpilot.com`). Working. Gated to product/place/business — returns empty for restaurant. Old `v2` HTML-scrape cache keys are bypassed (now `v3:`).
 - **Yelp reviews**: Hard-limited to 3 reviews, 160 chars each by Yelp's API. Reviews endpoint sometimes returns 4xx for non-partner keys. Card shows a note explaining this.
-- **SerpAPI budget**: 100 searches/month shared between **TripAdvisor + Facebook + Trustpilot** (3 routes, all default-on). A single non-restaurant search can fire 3 calls — monitor at serpapi.com/dashboard. 24hr caching reduces burn rate.
+- **SerpAPI budget**: 100 searches/month shared between **TripAdvisor + Facebook + Trustpilot + the vendor route** (all default-on). A product/electronics search fires one call per selected vendor (~6) plus Trustpilot — monitor at serpapi.com/dashboard. 24hr caching reduces burn rate.
 - **YouTube quota**: ~71 full queries/day at free tier. 2hr caching. Avoid busting cache during dev.
 - **Google textsearch**: Switched from `findplacefromtext` to `textsearch` — handles brand/chain names much better.
 - **Lock file**: `package-lock.json` generated on Windows omits Linux-specific optional deps from native packages. CI uses `npm install` (not `npm ci`) to work around this.
@@ -371,7 +393,7 @@ hearsay/
 
 1. Read this file completely
 2. Run `git log --oneline -10` to see recent commits
-3. Run `npm test` to confirm 34 tests still pass
+3. Run `npm test` to confirm 43 tests still pass
 4. Run `npm run dev` to start the frontend locally (http://localhost:5173/hearsay/)
 5. Run `cd workers && npx wrangler secret list` to verify Worker secrets
 6. Check live site: https://parisa-singh.github.io/hearsay

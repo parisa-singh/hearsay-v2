@@ -45,6 +45,12 @@ export const useUIStore = create(
       historyOpen: false,
       setHistoryOpen: (open) => set({ historyOpen: open }),
 
+      // Currently selected search category (transient, not persisted). Shared
+      // between SearchBar and PlatformToggle so the Pull-from row can react to
+      // the category the user has picked.
+      searchCategory: null,
+      setSearchCategory: (category) => set({ searchCategory: category }),
+
       // Theme (kept for persistence compatibility — toggle removed from UI)
       theme: 'dark',
 

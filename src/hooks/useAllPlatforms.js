@@ -3,12 +3,20 @@ import { fetchPlatform } from '../utils/api'
 import { queryKeys } from '../constants/queryKeys'
 import { useUIStore } from '../store/uiStore'
 import { PLATFORMS } from '../constants/platforms'
+import { getCategoryPlatforms } from '../utils/platformRegions'
 
 export function useAllPlatforms(query, category = null, refreshCount = 0) {
   const { isPlatformEnabled, location } = useUIStore()
 
+  // When a category is set, only query platforms relevant to it. This keeps
+  // vendor/retailer routes from firing (and burning SerpAPI budget) on
+  // restaurant/place searches, and keeps review sites out of product results.
+  const categorySet = category ? getCategoryPlatforms(category) : null
+  const categoryAllows = categorySet ? new Set(categorySet) : null
+
   const enabledPlatforms = PLATFORMS.filter(
     p => p.integrated && p.working !== false && isPlatformEnabled(p.id)
+      && (!categoryAllows || categoryAllows.has(p.id))
   )
 
   const locationParams = location
@@ -20,7 +28,13 @@ export function useAllPlatforms(query, category = null, refreshCount = 0) {
   const queries = useQueries({
     queries: enabledPlatforms.map(platform => ({
       queryKey: queryKeys.platform(platform.id, query, location, category, refreshCount),
-      queryFn: () => fetchPlatform(platform.endpoint, { query, category, ...locationParams, ...extraParams }),
+      queryFn: () => fetchPlatform(platform.endpoint, {
+        query,
+        category,
+        ...(platform.site ? { site: platform.site } : {}),
+        ...locationParams,
+        ...extraParams,
+      }),
       enabled: Boolean(query),
       staleTime: 5 * 60 * 1000,
       retry: 0,
